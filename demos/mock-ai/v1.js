@@ -28,9 +28,9 @@ window.MockAI = (function () {
   // The user prompt each scripted turn expects. Off-script input gets an
   // honest fallback instead of an unrelated rehearsed reply.
   const EXPECTED = [
-    "audit the repo's broken links and fix them",
-    "now rewrite every readme",
-    "just fix the catalog opening",
+    "Audit the repo's broken links and fix them",
+    "Now rewrite every README",
+    "Just fix the catalog opening",
   ];
   const norm = (t) => (t || "").toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
 
