@@ -1,6 +1,6 @@
-# Acme UI
+# Eidos UI
 
-**Live at [acme-ui.eidosagi.com](https://acme-ui.eidosagi.com).**
+**Live at [eidos-ui.eidosagi.com](https://eidos-ui.eidosagi.com).**
 
 A public, work-in-progress gallery of UI demos for agent products — two families:
 
@@ -26,7 +26,7 @@ does this control live?” Technique: [`demos/product-shell-mock/TECHNIQUE.md`](
 - No mock-ai server — pure static HTML + in-page data.
 
 ### Shared rules
-- **Brand:** Acme is a deliberate placeholder. CSS custom properties in one
+- **Brand:** Eidos UI is our house guide; tokens stay swappable. CSS custom properties in one
   `:root` block so real products re-skin by swapping tokens.
 - **Layout:** each demo under `demos/<slug>/`, **grown in public** — `v0/`,
   `v1/`… stay online; each version fixes a named failure.

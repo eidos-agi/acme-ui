@@ -1,4 +1,4 @@
-// Acme mock AI v1 — the "agent server" every demo frontend talks to.
+// Eidos UI mock AI v1 — the "agent server" every demo frontend talks to.
 // Speaks chat-events v1.1 shapes (envelope: session_id, turn_id, seq) over a
 // callback. No network, fully scripted, but honest about the hard parts:
 // stop() emits abort and then LATE EVENTS for the dead turn — clients are

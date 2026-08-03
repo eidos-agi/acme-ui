@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reference chat v3 — tool disclosure · Acme UI</title>
+<title>Reference chat v3 — tool disclosure · Eidos UI</title>
 <style>
   :root {
     --bg: #faf9f7; --surface: #ffffff; --ink: #1a1a1a; --ink-soft: #6b6a66;
@@ -69,7 +69,7 @@
 </head>
 <body>
 <header>
-  <a href="https://acme-ui.eidosagi.com/">acme ui</a>
+  <a href="https://eidos-ui.eidosagi.com/">eidos ui</a>
   <a href="../">&larr; versions</a>
   <span class="tag">v3</span>
   <span class="note">tool disclosure — activity at a glance, detail one click away. Scroll yank and crude errors still ahead (v4, v5).</span>
@@ -205,7 +205,7 @@ document.getElementById("composer").addEventListener("submit", (e) => {
   handle = agent.send("", onEvent);
 });
 
-// shell autoplay: the shell posts "acme-play" when its countdown veil lifts
+// shell autoplay: the shell posts "eidos-play" when its countdown veil lifts
 if (new URLSearchParams(location.search).has("autoplay")) {
   let played = false;
   const play = () => {
@@ -213,7 +213,7 @@ if (new URLSearchParams(location.search).has("autoplay")) {
     const b = document.getElementById("btn");
     if (b && !b.disabled) b.click();
   };
-  window.addEventListener("message", (e) => { if (e.data === "acme-play") play(); });
+  window.addEventListener("message", (e) => { if (e.data === "eidos-play") play(); });
   if (top === self) setTimeout(play, 800);
 }
 </script>

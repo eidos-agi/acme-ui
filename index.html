@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Acme UI — chat interfaces like the major companies</title>
+<title>Eidos UI — chat interfaces like the major companies</title>
 <meta name="description" content="Demo families for agent products: a chat frontend rebuilt version by version, and product shell mocks. Every version stays online, with source and copy-for-agent instructions.">
 <style>
-  /* Acme placeholder brand — swap these tokens to re-skin everything. */
+  /* Eidos UI tokens — swap these to re-skin everything. */
   :root {
     --bg: #faf9f7; --surface: #ffffff; --ink: #1a1a1a; --ink-soft: #6b6a66;
     --line: #e4e2dd; --accent: #0d5c4d; --accent-ink: #ffffff;
@@ -147,12 +147,12 @@
 </head>
 <body>
 <div id="side">
-  <div class="wordmark"><a href="#" id="home">Acme UI</a></div>
+  <div class="wordmark"><a href="#" id="home">Eidos UI</a></div>
   <a class="item" href="#" id="homebtn" style="margin-bottom:.6rem"><svg class="ic" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Home</a>
   <nav class="pills" id="pills"></nav>
   <div id="famlist"></div>
   <div class="sidelinks">
-    <a href="https://github.com/eidos-agi/acme-ui">source: eidos-agi/acme-ui</a>
+    <a href="https://github.com/eidos-agi/eidos-ui">source: eidos-agi/eidos-ui</a>
     <a href="https://github.com/eidos-agi/ui-patterns">patterns: eidos-agi/ui-patterns</a>
     <a href="demos/product-shell-mock/TECHNIQUE.md">shell-mock technique</a>
     <a href="https://eidosagi.com">eidos agi</a>
@@ -172,10 +172,9 @@
       <p class="note">Chat versions are checked against the acceptance list in
       <a href="https://github.com/eidos-agi/ui-patterns/blob/main/briefs/01-reference-chat-demo.md">brief 01</a>
       of eidos-agi/ui-patterns. Every chat demo talks to the same
-      <a href="https://github.com/eidos-agi/acme-ui/blob/master/demos/mock-ai/v1.js">mock agent</a>
+      <a href="https://github.com/eidos-agi/eidos-ui/blob/master/demos/mock-ai/v1.js">mock agent</a>
       (chat-events v1.1); the agent code never changes between versions. Shell
-      mocks use only in-page JS. Acme is a placeholder brand; colors and sizes
-      are CSS tokens you can swap.</p>
+      mocks use only in-page JS. Colors and sizes are CSS tokens you can swap.</p>
     </div>
   </div>
   <div id="veil"><div id="pierow"><div id="piewrap"><div id="pie"></div></div>
@@ -290,7 +289,7 @@ function renderAll() { renderPills(); renderSidebar(); renderDetail(); }
 function endVeil() {
   clearInterval(veilTimer);
   veil.classList.remove("on");
-  try { pane.contentWindow.postMessage("acme-play", "*"); } catch {}
+  try { pane.contentWindow.postMessage("eidos-play", "*"); } catch {}
 }
 function runVeil(item) {
   clearInterval(veilTimer);
@@ -321,13 +320,13 @@ function loadCode(x) {
 
 function agentMarkdown(x, source) {
   return [
-    "# Acme UI — " + (x.tags.includes("shell") ? "product shell mock" : "agent chat") + " v" + x.v + ": " + x.title,
+    "# Eidos UI — " + (x.tags.includes("shell") ? "product shell mock" : "agent chat") + " v" + x.v + ": " + x.title,
     "", x.desc, "", "Why it matters: " + (x.why || ""), "",
     "## Instructions for an implementing agent", "",
-    "- This is a complete, self-contained reference implementation. Adapt the pattern, not the placeholder brand: every color/size is a CSS custom property in one `:root` block — swap tokens for the host product.",
+    "- This is a complete, self-contained reference implementation. Adapt the pattern: every color/size is a CSS custom property in one `:root` block — swap tokens for the host product.",
     "- Chat demos consume a mock agent speaking chat-events v1.1: every event carries `{session_id, turn_id, seq}`; `text` events are deltas; `tool_use`/`tool_result` pair by `tool_use_id`; exactly one terminal event per turn (`done`, `abort`, or fatal `error`); events for a turn after its terminal event must be dropped.",
-    "- Mock agent source: https://acme-ui.eidosagi.com/demos/mock-ai/v1.js",
-    "- Live demo: https://acme-ui.eidosagi.com/" + x.href,
+    "- Mock agent source: https://eidos-ui.eidosagi.com/demos/mock-ai/v1.js",
+    "- Live demo: https://eidos-ui.eidosagi.com/" + x.href,
     "", "## Full source (index.html)", "", "```html", source.trim(), "```", ""
   ].join("\n");
 }

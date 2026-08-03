@@ -5,7 +5,7 @@
 phone side by side**, with clickable state. Founders and agents can argue
 about IA and navigation in minutes, not days.
 
-Proven in Knox Approve (You + Contexts pills) → generalized here as Acme UI.
+Proven in Knox Approve (You + Contexts pills) → generalized here as Eidos UI.
 
 ## When to use
 

@@ -1,4 +1,4 @@
-// Acme UI server — zero-dependency node.
+// Eidos UI server — zero-dependency node.
 // Serves /api/versions (dynamic: scans demos/<family>/v<N>/ dirs, merges each
 // dir's meta.json, appends planned.json rungs) plus the static site, so
 // `node server.js` is also full local dev. In production Caddy serves static
@@ -64,4 +64,4 @@ http.createServer((req, res) => {
     res.setHeader("content-type", MIME[path.extname(p)] || "application/octet-stream");
     res.end(buf);
   });
-}).listen(PORT, "127.0.0.1", () => console.log("acme-ui server on 127.0.0.1:" + PORT));
+}).listen(PORT, "127.0.0.1", () => console.log("eidos-ui server on 127.0.0.1:" + PORT));
