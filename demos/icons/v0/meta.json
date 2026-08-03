@@ -1,0 +1,8 @@
+{
+ "title": "Icon sets, not emojis",
+ "desc": "Emojis in product chrome read as AI filler. Side-by-side sidebar comparison, the agent-UI staple icons in Lucide, and the icon sets worth picking from.",
+ "why": "Icons carry your product's voice. This page is dogfooded: the acme-ui sidebar Home button uses the exact Lucide house shown here, not an emoji.",
+ "tags": [
+  "icons"
+ ]
+}

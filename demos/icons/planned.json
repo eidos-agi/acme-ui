@@ -1,0 +1,18 @@
+[
+ {
+  "v": 1,
+  "title": "Size and stroke discipline",
+  "desc": "One stroke token, rem sizing next to text, and the alignment rules that keep icons on the baseline.",
+  "tags": [
+   "icons"
+  ]
+ },
+ {
+  "v": 2,
+  "title": "Animated state icons",
+  "desc": "Spinner, morphing send-to-stop, and check-in animations that stay under 300ms.",
+  "tags": [
+   "icons"
+  ]
+ }
+]

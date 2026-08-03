@@ -14,6 +14,7 @@ const PORT = argPort > -1 ? +process.argv[argPort + 1] : 8123;
 const FAMILIES = [
   { key: "reference-chat", name: "Agent chat", filterable: true },
   { key: "product-shell-mock", name: "Product shell mocks", filterable: false },
+  { key: "icons", name: "Icons", filterable: false },
 ];
 
 function scanVersions() {

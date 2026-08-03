@@ -54,6 +54,9 @@
   .item.planned { opacity: .55; }
   .item .v { font-family: var(--mono); font-weight: 700; color: var(--accent); min-width: 2.2rem; }
   .item.current { border-color: var(--accent); background: var(--surface); }
+  svg.ic { width: 1rem; height: 1rem; stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none;
+    margin-right: .55rem; color: var(--accent); vertical-align: -.18em; }
   .sidelinks { margin-top: 1.4rem; font-family: var(--mono); font-size: .7rem;
     color: var(--ink-soft); display: flex; flex-direction: column; gap: .3rem; }
   .sidelinks a { color: inherit; }
@@ -112,7 +115,11 @@
     from { opacity: 0; transform: translateY(18px) scale(.9); }
     to   { opacity: 1; transform: translateY(0) scale(1); } }
   #pienum { font-family: var(--mono); font-size: 2.1rem; font-weight: 700; color: var(--accent); }
-  #vielabel { color: var(--ink-soft); font-size: .9rem; }
+  #wn { max-width: 30rem; text-align: center; padding: 0 1.5rem; }
+  #wn .wnh { font-family: var(--mono); font-size: .72rem; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: .35rem; }
+  #wn .wnt { font-weight: 700; margin-bottom: .25rem; }
+  #wn .wnd { color: var(--ink-soft); font-size: .9rem; }
 
   /* right code panel */
   #code { display: none; border-left: 1px solid var(--line); height: 100dvh;
@@ -136,7 +143,7 @@
 <body>
 <div id="side">
   <div class="wordmark"><a href="#" id="home">Acme UI</a></div>
-  <a class="item" href="#" id="homebtn" style="margin-bottom:.6rem">🏠&ensp;Home</a>
+  <a class="item" href="#" id="homebtn" style="margin-bottom:.6rem"><svg class="ic" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Home</a>
   <nav class="pills" id="pills"></nav>
   <div id="famlist"></div>
   <div class="sidelinks">
@@ -167,7 +174,8 @@
     </div>
   </div>
   <div id="veil"><div id="piewrap"><div id="pie"></div></div><div id="pienum">100%</div>
-    <div id="vielabel">loading the demo, then it plays itself</div></div>
+    <div id="wn"><div class="wnh">What's New:</div><div class="wnt" id="wnt"></div>
+    <div class="wnd" id="wnd"></div></div></div>
   <iframe id="pane" title="demo"></iframe>
 </div>
 
@@ -336,6 +344,8 @@ function applyHash() {
   if (item) {
     const target = item.href + (item.auto ? "?autoplay=1" : "");
     if (!prev || prev.href !== item.href) {
+      document.getElementById("wnt").textContent = "v" + item.v + " — " + item.title;
+      document.getElementById("wnd").textContent = item.desc || "";
       pane.src = target;
       runVeil();
       loadCode(item);
