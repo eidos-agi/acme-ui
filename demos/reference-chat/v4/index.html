@@ -200,14 +200,21 @@ document.getElementById("composer").addEventListener("submit", (e) => {
 // vignette: turn 2 streams, the view scrolls up mid-stream (no yank),
 // the jump pill appears, then jumps back to latest
 window.VIGNETTE = () => {
-  agent.preroll(onEvent, 2);   // two seeded turns guarantee overflow
+  agent.preroll(onEvent, 2);
   box.value = "Just fix the catalog opening";
   document.getElementById("composer").requestSubmit();
-  setTimeout(() => { log.scrollTop = 0; }, 900);
-  setTimeout(() => {
-    const j = document.getElementById("jump");
-    if (j.classList.contains("show")) j.click();
-  }, 2800);
+  // condition-driven, not timed: unpin once there is real overflow to
+  // scroll back through, then jump once the pill has had a beat on screen
+  const un = setInterval(() => {
+    if (log.scrollHeight - log.clientHeight > 200) {
+      clearInterval(un);
+      log.scrollTop = 0;
+      setTimeout(() => {
+        const j = document.getElementById("jump");
+        if (j.classList.contains("show")) j.click();
+      }, 2000);
+    }
+  }, 100);
 };
 </script>
 <script src="/demos/reference-chat/_autoplay.js?v=3"></script>
