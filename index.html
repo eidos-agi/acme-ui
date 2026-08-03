@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acme UI — reference frontends for humans watching agents work</title>
+<meta name="description" content="A public work-in-progress gallery of agent-chat UI demos: calm, legible, brand-neutral reference implementations.">
+<style>
+  /* Acme placeholder brand — swap these tokens to re-skin everything. */
+  :root {
+    --bg: #faf9f7;
+    --surface: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #6b6a66;
+    --line: #e4e2dd;
+    --accent: #0d5c4d;
+    --accent-ink: #ffffff;
+    --badge-live-bg: #0d5c4d;
+    --badge-live-ink: #ffffff;
+    --badge-wip-bg: #f0ede6;
+    --badge-wip-ink: #6b6a66;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --radius: 6px;
+    --gap: 1.25rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141413;
+      --surface: #1d1c1b;
+      --ink: #ececea;
+      --ink-soft: #98968f;
+      --line: #2e2d2a;
+      --accent: #4fb39a;
+      --accent-ink: #10201b;
+      --badge-live-bg: #4fb39a;
+      --badge-live-ink: #10201b;
+      --badge-wip-bg: #262523;
+      --badge-wip-ink: #98968f;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: var(--sans); line-height: 1.55;
+    max-width: 72rem; margin: 0 auto; padding: 3rem 1.5rem 4rem;
+  }
+  header { margin-bottom: 2.5rem; }
+  .wordmark {
+    font-family: var(--mono); font-size: 1rem; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--accent); font-weight: 700;
+  }
+  h1 { font-size: 1.9rem; line-height: 1.2; margin: .6rem 0 .5rem; max-width: 42rem; }
+  .sub { color: var(--ink-soft); max-width: 42rem; }
+  .wip {
+    display: inline-block; margin-top: 1rem; font-family: var(--mono);
+    font-size: .75rem; border: 1px solid var(--line); border-radius: 999px;
+    padding: .2rem .7rem; color: var(--ink-soft);
+  }
+  .grid {
+    display: grid; gap: var(--gap);
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    margin-top: 2rem;
+  }
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 1.25rem;
+    display: flex; flex-direction: column; gap: .55rem;
+    text-decoration: none; color: inherit;
+  }
+  a.card:hover { border-color: var(--accent); }
+  .card .num { font-family: var(--mono); font-size: .75rem; color: var(--ink-soft); }
+  .card h2 { font-size: 1.05rem; }
+  .card p { font-size: .9rem; color: var(--ink-soft); flex: 1; }
+  .badge {
+    align-self: flex-start; font-family: var(--mono); font-size: .68rem;
+    letter-spacing: .06em; text-transform: uppercase;
+    padding: .18rem .55rem; border-radius: 999px;
+    background: var(--badge-wip-bg); color: var(--badge-wip-ink);
+  }
+  .badge.live { background: var(--badge-live-bg); color: var(--badge-live-ink); }
+  section.about { margin-top: 3rem; border-top: 1px solid var(--line); padding-top: 1.5rem;
+    color: var(--ink-soft); font-size: .9rem; max-width: 42rem; }
+  section.about a { color: var(--accent); }
+  footer { margin-top: 2.5rem; font-family: var(--mono); font-size: .75rem; color: var(--ink-soft); }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wordmark">Acme UI</div>
+  <h1>Reference frontends for humans watching agents work.</h1>
+  <p class="sub">Live demos of the interaction grain that makes agent chat feel
+  great — realtime, legible, calm. Each demo is a scripted agent turn you can
+  watch and interrupt: informed, never overwhelmed. Brand-neutral by design;
+  every color and size is a token you can swap.</p>
+  <span class="wip">work in progress — demos land here as they pass their checklists</span>
+</header>
+
+<main class="grid">
+  <div class="card">
+    <span class="num">01</span>
+    <h2>Reference chat</h2>
+    <p>The composite: streaming turns, tool activity, stop mid-stream, a
+    recoverable error that keeps partial output. The demo the others deepen.</p>
+    <span class="badge">in design</span>
+  </div>
+  <div class="card">
+    <span class="num">02</span>
+    <h2>Streaming grain</h2>
+    <p>Time-to-first-token, caret, token batching cadence, in-place stream
+    slot, late-token suppression after abort.</p>
+    <span class="badge">planned</span>
+  </div>
+  <div class="card">
+    <span class="num">03</span>
+    <h2>Tool disclosure</h2>
+    <p>What the agent is doing, at a glance: collapsed activity rows, parallel
+    tools, a slow tool with elapsed time, a failed tool. Depth one click away.</p>
+    <span class="badge">planned</span>
+  </div>
+  <div class="card">
+    <span class="num">04</span>
+    <h2>Interrupt &amp; resume</h2>
+    <p>Send morphs to Stop, abort keeps the partial, reconnect replays the gap
+    from the last sequence cursor.</p>
+    <span class="badge">planned</span>
+  </div>
+  <div class="card">
+    <span class="num">05</span>
+    <h2>Approval card</h2>
+    <p>Human-in-the-loop: a dangerous tool call renders an approve/deny card
+    inline and the agent stays blocked until you decide.</p>
+    <span class="badge">planned</span>
+  </div>
+  <div class="card">
+    <span class="num">06</span>
+    <h2>Scroll pin</h2>
+    <p>Auto-follow while pinned, unpin the moment you scroll up, jump-to-latest
+    when new content arrives below.</p>
+    <span class="badge">planned</span>
+  </div>
+</main>
+
+<section class="about">
+  <p>Acme UI is the public example gallery of
+  <a href="https://github.com/eidos-agi/ui-patterns">eidos-agi/ui-patterns</a> —
+  a design memory for agent-chat frontends. Demos are built from
+  self-contained briefs with acceptance checklists; a demo goes live here only
+  when its checklist passes on the running artifact. Source for this site:
+  <a href="https://github.com/eidos-agi/acme-ui">eidos-agi/acme-ui</a>.</p>
+</section>
+
+<footer>
+  <a href="https://eidosagi.com">eidos agi</a> · acme is a placeholder brand — that's the point
+</footer>
+</body>
+</html>
