@@ -371,7 +371,7 @@ window.addEventListener("hashchange", applyHash);
 
 (async function boot() {
   try {
-    FAMILIES = (await (await fetch("/api/versions")).json()).families;
+    FAMILIES = (await (await fetch("/api/versions", { cache: "no-store" })).json()).families;
     const filterables = FAMILIES.filter(f => f.filterable);
     tags = ["all", "live", ...new Set(filterables.flatMap(f => f.items.flatMap(x => x.tags || [])))];
   } catch (e) {

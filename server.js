@@ -54,7 +54,7 @@ http.createServer((req, res) => {
   const u = decodeURIComponent(new URL(req.url, "http://x").pathname);
   if (u === "/api/versions") {
     res.setHeader("content-type", "application/json");
-    res.setHeader("cache-control", "no-cache");
+    res.setHeader("cache-control", "no-store");
     return res.end(JSON.stringify({ families: scanVersions() }));
   }
   let p = path.normalize(path.join(ROOT, u));
