@@ -362,7 +362,11 @@ autogrow();
 function attemptSend(typed, bubble) {
   const chip = bubble.querySelector(".chip");
   if (document.getElementById("offline").checked) {
-    setTimeout(() => {              // transport fails: honest inline state
+    // a real failure is a TIMEOUT: pending holds, escalates, then fails
+    chip.textContent = "sending…";
+    setTimeout(() => { if (bubble.classList.contains("pending")) chip.textContent = "still trying…"; }, 1200);
+    setTimeout(() => {
+      if (!bubble.classList.contains("pending")) return;
       bubble.classList.remove("pending");
       bubble.classList.add("failed");
       chip.innerHTML = "";
@@ -372,7 +376,7 @@ function attemptSend(typed, bubble) {
       chip.appendChild(b);
       clearThinking();
       setBusy(false);
-    }, 500);
+    }, 2600);
     return;
   }
   if (handle) return;               // a turn is streaming; retry stays available
@@ -415,7 +419,7 @@ window.VIGNETTE = () => {
     document.getElementById("offline").checked = false;
     const retry = log.querySelector(".msg.user.failed .chip button");
     if (retry) retry.click();
-  }, 2200);
+  }, 4300);
 };
 </script>
 <script src="/demos/reference-chat/_autoplay.js?v=7"></script>
