@@ -1,0 +1,9 @@
+{
+ "title": "Thinking",
+ "desc": "Pulsing dots appear the moment you press send and clear when the first token arrives, so the gap never reads as a hang.",
+ "why": "Dead air after send is the fastest way to lose a user's trust. The indicator turns the same milliseconds into visible work.",
+ "tags": [
+  "streaming"
+ ],
+ "auto": true
+}

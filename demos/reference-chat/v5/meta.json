@@ -1,0 +1,9 @@
+{
+ "title": "Calm errors",
+ "desc": "A recoverable error shows as a small inline note with an icon. Partial output stays, the recovered text starts a fresh bubble, and the turn finishes.",
+ "why": "An error mid-turn is information, not an alarm. The old raw JSON dump destroyed trust and reading order in one move.",
+ "tags": [
+  "errors"
+ ],
+ "auto": true
+}

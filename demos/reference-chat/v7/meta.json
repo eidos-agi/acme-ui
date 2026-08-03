@@ -1,0 +1,9 @@
+{
+ "title": "Elapsed on slow tools",
+ "desc": "A running tool row shows live elapsed time next to its spinner. The clock stops when the result lands or the turn ends.",
+ "why": "Four silent seconds feels broken; four counted seconds feels like work. Same tool, one small clock.",
+ "tags": [
+  "disclosure"
+ ],
+ "auto": true
+}

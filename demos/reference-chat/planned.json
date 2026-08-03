@@ -1,29 +1,5 @@
 [
  {
-  "v": 5,
-  "title": "Calm errors",
-  "desc": "A recoverable error shows as a small inline note. Partial output stays, and the turn continues after recovery.",
-  "tags": [
-   "errors"
-  ]
- },
- {
-  "v": 6,
-  "title": "Thinking + TTFT",
-  "desc": "A thinking indicator fills the gap between pressing send and the first token arriving.",
-  "tags": [
-   "streaming"
-  ]
- },
- {
-  "v": 7,
-  "title": "Elapsed on slow tools",
-  "desc": "Tools that run long show elapsed time while they work.",
-  "tags": [
-   "disclosure"
-  ]
- },
- {
   "v": 8,
   "title": "Safe markdown stream",
   "desc": "Markdown renders progressively during the stream, sanitized, without flicker from half-open elements.",

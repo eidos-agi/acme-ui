@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference chat v6 — thinking · Eidos UI</title>
+<link rel="stylesheet" href="/brand.css?v=5">
+<link rel="stylesheet" href="/demos/reference-chat/_base.css?v=5">
+<style>
+  /* v3 keeps v2's speaker identity */
+  .user { background: var(--accent); color: var(--accent-ink); align-self: flex-end; max-width: 85%; }
+  .assistant { background: var(--surface); border: 1px solid var(--line); align-self: flex-start; max-width: 85%; }
+  /* v3: tool rows — glanceable head, smoothly expanding body */
+  .toolrow { align-self: flex-start; max-width: 85%; min-width: 18rem;
+    border: 1px solid var(--line); border-radius: 3px; background: var(--tool-bg); }
+  .toolhead { display: flex; align-items: center; gap: .55rem; width: 100%;
+    font-family: var(--mono); font-size: .8rem; color: var(--ink-soft);
+    background: none; border: none; padding: .5rem .75rem; cursor: pointer; text-align: left; }
+  .chev { display: inline-block; transition: transform .2s ease; font-size: .7rem; }
+  .toolrow.open .chev { transform: rotate(90deg); }
+  .tname { color: var(--ink); font-weight: 700; }
+  .tlabel { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tstate { white-space: nowrap; }
+  .tstate.ok { color: var(--accent); }
+  .tstate.err { color: var(--stop); }
+  .spinner { width: .8em; height: .8em; border: 2px solid var(--line);
+    border-top-color: var(--accent); border-radius: 50%; display: inline-block;
+    animation: spin .7s linear infinite; vertical-align: -.1em; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toolbody { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .22s ease; }
+  .toolbody > .inner { overflow: hidden; min-height: 0; }
+  .toolrow.open .toolbody { grid-template-rows: 1fr; }
+  .toolbody pre { font-family: var(--mono); font-size: .75rem; line-height: 1.5;
+    color: var(--ink-soft); padding: 0 .75rem .6rem 2rem; white-space: pre-wrap;
+    border-top: 1px dashed var(--line); margin: 0 0 0 0; padding-top: .5rem; }
+  /* v4 lesson: jump-to-latest appears when you unpin and new content arrives */
+  #jump { position: fixed; left: 50%; transform: translateX(-50%); bottom: 5.6rem;
+    display: none; align-items: center; gap: .4rem; font-family: var(--mono);
+    font-size: .75rem; padding: .4rem .85rem; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--accent);
+    cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+  #jump.show { display: flex; }
+  #jump svg { width: .9rem; height: .9rem; stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  /* v5 lesson: a recoverable error is a note, not a dump */
+  .errnote { align-self: flex-start; display: flex; align-items: center; gap: .45rem;
+    font-family: var(--mono); font-size: .75rem; color: var(--bad);
+    border: 1px dashed var(--bad); border-radius: var(--radius);
+    padding: .35rem .6rem; opacity: .85; }
+  .errnote svg { width: .95rem; height: .95rem; stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  /* v6 lesson: the send-to-first-token gap is visible work, not silence */
+  .thinking { align-self: flex-start; display: flex; gap: .3rem; padding: .7rem .9rem; }
+  .thinking i { width: .45rem; height: .45rem; border-radius: 50%;
+    background: var(--ink-soft); animation: think 1s infinite ease-in-out; }
+  .thinking i:nth-child(2) { animation-delay: .15s; }
+  .thinking i:nth-child(3) { animation-delay: .3s; }
+  @keyframes think { 0%,100% { opacity: .25; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(-2px); } }
+</style>
+</head>
+<body>
+<header>
+  <a href="https://ui.eidosagi.com/">eidos ui</a>
+  <a href="../">&larr; versions</a>
+  <span class="tag">v6</span>
+  <span class="note">thinking — no dead air after send: pulsing dots hold the space until the first token lands.</span>
+</header>
+
+<div id="log"></div>
+
+<button id="jump" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>latest</button>
+
+<form id="composer">
+  <div class="row">
+    <input id="box" value="Audit the repo's broken links and fix them" autocomplete="off">
+    <button id="btn" type="submit" class="primary">Send</button>
+  </div>
+</form>
+
+<script src="/demos/mock-ai/v1.js?v=5"></script>
+<script>
+// v6 fixes DEAD AIR on top of v5: pulsing dots appear the moment you send
+// and clear on the first real content event, so the send-to-first-token gap
+// reads as the agent working, never as a hang.
+const log = document.getElementById("log");
+const box = document.getElementById("box");
+const btn = document.getElementById("btn");
+const agent = MockAI.v1();
+let current = null;
+let liveTurn = null;
+let handle = null;
+const dead = new Set();
+const tools = new Map(); // tool_use_id -> {row, state, pre}
+const jump = document.getElementById("jump");
+let thinkingEl = null;
+
+function showThinking() {
+  clearThinking();
+  const d = document.createElement("div");
+  d.className = "thinking";
+  d.innerHTML = "<i></i><i></i><i></i>";
+  log.appendChild(d);
+  follow();
+  thinkingEl = d;
+}
+function clearThinking() {
+  if (thinkingEl) { thinkingEl.remove(); thinkingEl = null; }
+}
+let pinned = true;
+
+log.addEventListener("scroll", () => {
+  pinned = log.scrollHeight - log.scrollTop - log.clientHeight < 40;
+  if (pinned) jump.classList.remove("show");
+});
+function follow() {
+  if (pinned) log.scrollTop = log.scrollHeight;
+  else jump.classList.add("show");
+}
+jump.onclick = () => { log.scrollTop = log.scrollHeight; pinned = true; jump.classList.remove("show"); };
+
+function add(cls, text) {
+  const d = document.createElement("div");
+  d.className = "msg " + cls;
+  d.textContent = text;
+  log.appendChild(d);
+  follow();
+  return d;
+}
+
+function addErrNote(text) {
+  const d = document.createElement("div");
+  d.className = "errnote";
+  d.innerHTML = '<svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 20h16a2 2 0 0 0 1.73-2Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span></span>';
+  d.querySelector("span").textContent = text;
+  log.appendChild(d);
+  follow();
+}
+
+function fmtMs(ms) { return ms >= 1000 ? (ms / 1000).toFixed(1) + "s" : ms + "ms"; }
+
+function addToolRow(ev) {
+  const row = document.createElement("div");
+  row.className = "toolrow";
+  const head = document.createElement("button");
+  head.className = "toolhead";
+  head.type = "button";
+  head.innerHTML = '<span class="chev">▸</span><span class="tname"></span>' +
+    '<span class="tlabel"></span><span class="tstate"><span class="spinner"></span></span>';
+  head.querySelector(".tname").textContent = ev.name;
+  head.querySelector(".tlabel").textContent = ev.label;
+  const body = document.createElement("div");
+  body.className = "toolbody";
+  const inner = document.createElement("div");
+  inner.className = "inner";
+  const pre = document.createElement("pre");
+  pre.textContent = "input: " + JSON.stringify(ev.input || {}, null, 2);
+  inner.appendChild(pre);
+  body.appendChild(inner);
+  row.appendChild(head);
+  row.appendChild(body);
+  head.addEventListener("click", () => row.classList.toggle("open"));
+  log.appendChild(row);
+  follow();
+  tools.set(ev.tool_use_id, { row, state: head.querySelector(".tstate"), pre });
+}
+
+function resolveToolRow(ev) {
+  const t = tools.get(ev.tool_use_id);
+  if (!t) return;
+  const ok = ev.status === "ok";
+  t.state.className = "tstate " + (ok ? "ok" : "err");
+  t.state.textContent = (ok ? "✓" : "✗") + " " + fmtMs(ev.metrics.duration_ms);
+  t.pre.textContent = ev.content;
+}
+
+function setBusy(busy) {
+  btn.textContent = busy ? "Stop" : "Send";
+  btn.classList.toggle("stop", busy);
+  box.disabled = busy;
+  if (!busy) box.focus();
+}
+
+function endTurn(turn_id) {
+  clearThinking();
+  dead.add(turn_id);
+  liveTurn = null;
+  handle = null;
+  setBusy(false);
+}
+
+function onEvent(ev) {
+  if (dead.has(ev.turn_id)) return;           // late-token suppression
+  if (liveTurn !== null && ev.turn_id !== liveTurn) return;
+  if (ev.type !== "turn_start" && thinkingEl) clearThinking();
+  if (ev.type === "turn_start") {
+    liveTurn = ev.turn_id;
+    current = add("assistant", "");
+  } else if (ev.type === "text") {
+    if (!current) current = add("assistant", "");
+    current.textContent += ev.text;
+    follow();
+  } else if (ev.type === "tool_use") {
+    addToolRow(ev);
+    current = null;
+  } else if (ev.type === "tool_result") {
+    resolveToolRow(ev);
+    current = null;
+  } else if (ev.type === "abort") {
+    if (current && !current.textContent) current.remove();
+    add("stopped", "⏹ stopped — partial response kept");
+    current = null;
+    endTurn(ev.turn_id);
+  } else if (ev.type === "done") {
+    if (current && !current.textContent) current.remove();
+    current = null;
+    endTurn(ev.turn_id);
+  } else if (ev.type === "error" && !ev.recoverable) {
+    add("stopped", "error: " + ev.text);
+    current = null;
+    endTurn(ev.turn_id);
+  } else if (ev.type === "error" && ev.recoverable) {
+    addErrNote(ev.text);
+    current = null; // recovered text starts a fresh bubble, in order
+  } else {
+    add("stopped", JSON.stringify(ev));
+  }
+}
+
+document.getElementById("composer").addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (handle) { handle.stop(); return; }
+  if (!box.value.trim()) return;
+  const typed = box.value;
+  add("user", typed);
+  box.value = "";
+  setBusy(true);
+  showThinking();
+  handle = agent.send(typed, onEvent);
+});
+
+
+// vignette: turn 2 streams, the view scrolls up mid-stream (no yank),
+// the jump pill appears, then jumps back to latest
+window.VIGNETTE = () => {
+  agent.preroll(onEvent, 1);
+  box.value = "Now rewrite every README";
+  document.getElementById("composer").requestSubmit();
+};
+</script>
+<script src="/demos/reference-chat/_autoplay.js?v=5"></script>
+</body>
+</html>
