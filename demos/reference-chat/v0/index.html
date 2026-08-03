@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Reference chat v0 — the naive baseline · Eidos UI</title>
-<link rel="stylesheet" href="/brand.css?v=3">
-<link rel="stylesheet" href="/demos/reference-chat/_base.css?v=3">
+<link rel="stylesheet" href="/brand.css?v=4">
+<link rel="stylesheet" href="/demos/reference-chat/_base.css?v=4">
 <style>
   /* v0 lesson: no speaker identity, raw dumps, full-width agent rows */
   .user { background: var(--user-bg); align-self: flex-end; max-width: 85%; }
@@ -32,7 +32,7 @@
   </div>
 </form>
 
-<script src="/demos/mock-ai/v1.js?v=3"></script>
+<script src="/demos/mock-ai/v1.js?v=4"></script>
 <script>
 // v0 is a NAIVE CLIENT of the mock agent (../../mock-ai/v1.js, chat-events
 // v1.1). Same agent every version talks to — only the rendering grows up.
@@ -84,7 +84,7 @@ document.getElementById("composer").addEventListener("submit", (e) => {
   box.value = "";
   send.disabled = true;   // v0 sin: no Stop — you just wait
   box.disabled = true;
-  agent.send("", onEvent);
+  agent.send(typed, onEvent);
 });
 
 
@@ -96,6 +96,6 @@ window.VIGNETTE = () => {
   document.getElementById("composer").requestSubmit();
 };
 </script>
-<script src="/demos/reference-chat/_autoplay.js?v=3"></script>
+<script src="/demos/reference-chat/_autoplay.js?v=4"></script>
 </body>
 </html>

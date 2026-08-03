@@ -25,6 +25,15 @@ window.MockAI = (function () {
     return out;
   }
 
+  // The user prompt each scripted turn expects. Off-script input gets an
+  // honest fallback instead of an unrelated rehearsed reply.
+  const EXPECTED = [
+    "audit the repo's broken links and fix them",
+    "now rewrite every readme",
+    "just fix the catalog opening",
+  ];
+  const norm = (t) => (t || "").toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
+
   // [delay_ms, event]... per turn behavior
   const TURN_SCRIPTS = [
     // 1 — happy path with two tools (from ui-patterns brief 01)
@@ -62,7 +71,7 @@ window.MockAI = (function () {
 
   function v1() {
     const session_id = "mock-" + Math.random().toString(36).slice(2, 8);
-    let seq = 0, turnCount = 0;
+    let seq = 0, turnCount = 0, scriptIdx = 0;
     let timers = [], liveTurn = null, cb = null;
 
     function emit(ev, turn_id) {
@@ -82,7 +91,19 @@ window.MockAI = (function () {
         turnCount += 1;
         const turn_id = turnCount;
         liveTurn = turn_id;
-        const script = TURN_SCRIPTS[(turnCount - 1) % TURN_SCRIPTS.length]();
+        const want = EXPECTED[scriptIdx % EXPECTED.length];
+        let script;
+        if (userText && norm(userText) && norm(userText) !== norm(want)) {
+          // off-script: say so, teach the next line, don't burn a script
+          script = [
+            [300, { type: "turn_start" }],
+            ...deltas('I\'m a scripted demo, so I only know my rehearsed lines. Try asking: "' + want + '"', 2, 45),
+            [300, { type: "done", result: { turns: 1, latency_ms: 1500 } }],
+          ];
+        } else {
+          script = TURN_SCRIPTS[scriptIdx % TURN_SCRIPTS.length]();
+          scriptIdx += 1;
+        }
         let at = 0;
         timers = [];
         for (const [delay, ev] of script) {
@@ -110,6 +131,7 @@ window.MockAI = (function () {
         cb = onEvent;
         for (let i = 0; i < turns; i++) {
           turnCount += 1;
+          scriptIdx += 1;
           for (const [, ev] of TURN_SCRIPTS[i % TURN_SCRIPTS.length]()) {
             if (ev.type) emit(ev, turnCount);
           }
