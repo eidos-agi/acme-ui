@@ -1,30 +1,5 @@
 [
  {
-  "v": 12,
-  "title": "Rich accordion expansion",
-  "desc": "Long assistant sections \u2014 reasoning, step groups, big answers \u2014 collapse into accordions that expand smoothly with full markdown inside, the v3 tool-row mechanic generalized to any rich content.",
-  "tags": [
-   "disclosure",
-   "markdown"
-  ]
- },
- {
-  "v": 13,
-  "title": "Approval card",
-  "desc": "A risky tool call shows an approve/deny card in the transcript, and the agent waits for the decision. Needs mock v2.",
-  "tags": [
-   "approvals"
-  ]
- },
- {
-  "v": 14,
-  "title": "Danger grading",
-  "desc": "Approval cards vary by risk level. Safe tools run without asking; risky ones wait.",
-  "tags": [
-   "approvals"
-  ]
- },
- {
   "v": 15,
   "title": "Reconnect + replay",
   "desc": "After a connection drop, the client resumes from its last sequence number and the missed events replay. Needs mock v2.",

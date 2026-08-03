@@ -1,0 +1,9 @@
+{
+ "title": "Danger grading",
+ "desc": "Approval cards wear the tool's declared risk level \u2014 badge and border color \u2014 while tools with no danger flag run without asking. The vignette denies a high-risk delete and the agent takes it gracefully.",
+ "why": "If everything needs approval, approvals become clicking through. Grading keeps the gate meaningful: safe flows, risky waits.",
+ "tags": [
+  "approvals"
+ ],
+ "auto": true
+}

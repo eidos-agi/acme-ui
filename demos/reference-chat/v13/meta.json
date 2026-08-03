@@ -1,0 +1,9 @@
+{
+ "title": "Approval card",
+ "desc": "A tool call marked approval-required renders an inline card with the exact command and Approve/Deny buttons. The agent is genuinely blocked until you decide; deny ends the action gracefully.",
+ "why": "Autonomy needs a human gate at the dangerous moments. The card keeps the decision in the conversation, with the real command visible.",
+ "tags": [
+  "approvals"
+ ],
+ "auto": true
+}

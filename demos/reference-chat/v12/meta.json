@@ -1,0 +1,10 @@
+{
+ "title": "Rich accordion expansion",
+ "desc": "Sections stream fully open so you watch them arrive; when the turn ends, each ## section tucks into an accordion header that expands smoothly with full markdown inside.",
+ "why": "Long answers should end tidy. The v3 tool-row mechanic, generalized: depth on demand for any rich content, not just tools.",
+ "tags": [
+  "disclosure",
+  "markdown"
+ ],
+ "auto": true
+}
