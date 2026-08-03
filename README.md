@@ -1,6 +1,6 @@
 # Eidos UI
 
-**Live at [eidos-ui.eidosagi.com](https://eidos-ui.eidosagi.com).**
+**Live at [ui.eidosagi.com](https://ui.eidosagi.com).**
 
 A public, work-in-progress gallery of UI demos for agent products — two families:
 

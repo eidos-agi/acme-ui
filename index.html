@@ -325,8 +325,8 @@ function agentMarkdown(x, source) {
     "## Instructions for an implementing agent", "",
     "- This is a complete, self-contained reference implementation. Adapt the pattern: every color/size is a CSS custom property in one `:root` block — swap tokens for the host product.",
     "- Chat demos consume a mock agent speaking chat-events v1.1: every event carries `{session_id, turn_id, seq}`; `text` events are deltas; `tool_use`/`tool_result` pair by `tool_use_id`; exactly one terminal event per turn (`done`, `abort`, or fatal `error`); events for a turn after its terminal event must be dropped.",
-    "- Mock agent source: https://eidos-ui.eidosagi.com/demos/mock-ai/v1.js",
-    "- Live demo: https://eidos-ui.eidosagi.com/" + x.href,
+    "- Mock agent source: https://ui.eidosagi.com/demos/mock-ai/v1.js",
+    "- Live demo: https://ui.eidosagi.com/" + x.href,
     "", "## Full source (index.html)", "", "```html", source.trim(), "```", ""
   ].join("\n");
 }
