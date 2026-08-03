@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Product shell mock v0 — context pills · Acme UI</title>
+  <meta name="description" content="Interactive multi-surface product shell mock: desktop + phone, shared context pill strip. Technique demo for IA before native code." />
+  <style>
+    /* Product tokens — swap to re-skin. Example palette is workshop-dark (not Acme chat light). */
+    :root {
+      --bg: #15110f;
+      --surface: #1f1a16;
+      --raised: #28221c;
+      --text: #ede5d8;
+      --muted: #a89e91;
+      --primary: #d8a263;
+      --primary-deep: #c4935a;
+      --secondary: #8fa385;
+      --danger: #d77a5e;
+      --border: rgba(168, 158, 145, 0.32);
+      --void: #0a0a0f;
+      --command: #c8d4ad;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "SF Pro Text", system-ui, -apple-system, sans-serif;
+      background: var(--void);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 28px 24px 48px;
+    }
+    h1 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin: 0 0 6px;
+      color: var(--primary);
+    }
+    .lede {
+      color: var(--muted);
+      font-size: 0.9rem;
+      max-width: 52rem;
+      line-height: 1.45;
+      margin: 0 0 22px;
+    }
+    .stage {
+      display: grid;
+      grid-template-columns: 1.15fr 0.72fr;
+      gap: 28px;
+      align-items: start;
+    }
+    @media (max-width: 1100px) {
+      .stage { grid-template-columns: 1fr; }
+    }
+    .label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    /* —— Mac window —— */
+    .mac {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+      min-height: 560px;
+      display: flex;
+      flex-direction: column;
+    }
+    .mac-chrome {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.r { background: #c45c4a; }
+    .dot.y { background: #c4a04a; }
+    .dot.g { background: #5a9c6a; }
+    .mac-title {
+      flex: 1;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .mac-body { display: flex; flex: 1; min-height: 0; }
+    .sidebar {
+      width: 200px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 12px 0;
+      flex-shrink: 0;
+    }
+    .side-sec {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 10px 16px 6px;
+    }
+    .side-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      font-size: 0.88rem;
+      cursor: pointer;
+      color: var(--text);
+    }
+    .side-item:hover { background: var(--raised); }
+    .side-item.active {
+      background: rgba(216, 162, 99, 0.12);
+      color: var(--primary);
+      border-left: 2px solid var(--primary);
+      padding-left: 14px;
+    }
+    .badge {
+      font-size: 0.7rem;
+      background: var(--raised);
+      color: var(--muted);
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-variant-numeric: tabular-nums;
+    }
+    .badge.hot {
+      background: rgba(216, 162, 99, 0.2);
+      color: var(--primary);
+    }
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* Context pill strip — THE chooser */
+    .context-strip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+    .strip-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      flex-shrink: 0;
+      margin-right: 4px;
+    }
+    .pill {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--raised);
+      color: var(--muted);
+      font-size: 0.8rem;
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .pill:hover { border-color: var(--primary); color: var(--text); }
+    .pill.on {
+      background: rgba(216, 162, 99, 0.18);
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .pill .n {
+      font-size: 0.68rem;
+      opacity: 0.85;
+      font-variant-numeric: tabular-nums;
+    }
+    .pill.unsorted.on {
+      border-color: var(--danger);
+      color: var(--danger);
+      background: rgba(215, 122, 94, 0.12);
+    }
+
+    .content { padding: 16px 18px 24px; flex: 1; overflow: auto; }
+    .page-h {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .page-h h2 { margin: 0; font-size: 1.15rem; font-weight: 600; }
+    .page-h .sub { color: var(--muted); font-size: 0.8rem; }
+    .card {
+      background: var(--raised);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .card .t { font-weight: 600; font-size: 0.92rem; }
+    .card .m { color: var(--muted); font-size: 0.78rem; margin-top: 4px; }
+    .chip {
+      display: inline-block;
+      font-size: 0.65rem;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(216, 162, 99, 0.15);
+      color: var(--primary);
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .empty {
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 28px 8px;
+    }
+
+    /* —— Phone —— */
+    .phone-wrap { display: flex; flex-direction: column; align-items: center; }
+    .phone {
+      width: 320px;
+      height: 640px;
+      background: var(--bg);
+      border: 2px solid #3a342e;
+      border-radius: 36px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .notch {
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+    }
+    .notch-bar {
+      width: 90px;
+      height: 5px;
+      border-radius: 999px;
+      background: #2a2420;
+    }
+    .phone-strip {
+      padding: 10px 12px 8px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .phone-strip .pills {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+    .phone-strip .pills::-webkit-scrollbar { display: none; }
+    .phone .pill { font-size: 0.72rem; padding: 5px 10px; }
+    .phone-content { flex: 1; overflow: auto; padding: 12px 14px 8px; }
+    .tabbar {
+      display: flex;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      padding: 8px 4px 14px;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      font-size: 0.62rem;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 4px 0;
+    }
+    .tab.on { color: var(--primary); }
+    .tab .ico { font-size: 1.1rem; display: block; margin-bottom: 2px; }
+
+    .callout {
+      margin-top: 28px;
+      max-width: 52rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      background: var(--surface);
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+    .callout strong { color: var(--text); }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.8em;
+      color: var(--command, #c8d4ad);
+    }
+  </style>
+</head>
+<body>
+  <p class="lede" style="font-family:ui-monospace,monospace;font-size:0.75rem;margin-bottom:8px">
+    <a href="../" style="color:var(--primary)">product-shell-mock</a> / v0
+  </p>
+  <h1>Context pill strip · desktop + phone (mock)</h1>
+  <p class="lede">
+    <strong style="color:var(--text)">Technique:</strong> one static HTML file, two device frames, one shared JS state.
+    Argue IA before Swift/RN. <strong style="color:var(--primary)">Chooser:</strong> horizontal pills filter everything below.
+    <strong style="color:var(--text)">You</strong> (Inbox rollup · Device) stays global — not a pill.
+    Example product spine: “You + Contexts” (real dogfood: Knox Approve; pills eventually from plane registry).
+  </p>
+
+  <div class="stage">
+    <!-- MAC -->
+    <div>
+      <div class="label">Mac · desktop</div>
+      <div class="mac" id="mac">
+        <div class="mac-chrome">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="mac-title">Acme Keys (placeholder product)</span>
+        </div>
+        <div class="mac-body">
+          <nav class="sidebar">
+            <div class="side-sec">You</div>
+            <div class="side-item" data-nav="inbox" onclick="setNav('inbox')">
+              Inbox <span class="badge hot" id="inbox-badge">3</span>
+            </div>
+            <div class="side-item" data-nav="device" onclick="setNav('device')">Device</div>
+            <div class="side-sec">In context</div>
+            <div class="side-item active" data-nav="approvals" onclick="setNav('approvals')">Approvals</div>
+            <div class="side-item" data-nav="keys" onclick="setNav('keys')">Keys</div>
+            <div class="side-item" data-nav="sessions" onclick="setNav('sessions')">Sessions</div>
+            <div class="side-item" data-nav="profiles" onclick="setNav('profiles')">Profiles</div>
+            <div class="side-item" data-nav="docs" onclick="setNav('docs')">Documents</div>
+            <div class="side-item" data-nav="history" onclick="setNav('history')">History</div>
+          </nav>
+          <div class="main">
+            <div class="context-strip" id="mac-strip" aria-label="Context">
+              <span class="strip-label">Context</span>
+              <!-- pills injected -->
+            </div>
+            <div class="content" id="mac-content"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHONE -->
+    <div class="phone-wrap">
+      <div class="label">iPhone · same product</div>
+      <div class="phone">
+        <div class="notch"><div class="notch-bar"></div></div>
+        <div class="phone-strip">
+          <div class="pills" id="phone-strip" aria-label="Context"></div>
+        </div>
+        <div class="phone-content" id="phone-content"></div>
+        <div class="tabbar">
+          <div class="tab on" data-ptab="inbox" onclick="setPhoneTab('inbox')"><span class="ico">▢</span>Inbox</div>
+          <div class="tab" data-ptab="keys" onclick="setPhoneTab('keys')"><span class="ico">⌥</span>Keys</div>
+          <div class="tab" data-ptab="you" onclick="setPhoneTab('you')"><span class="ico">●</span>You</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Why this mock type exists</strong><br />
+    Native code is expensive to thrash. Clickable dual-surface HTML is cheap. Use it when the question is
+    “where does this control live?” not “is the type ramp perfect?”.<br /><br />
+    <strong>Chooser rules (ship from mock)</strong><br />
+    1. Pills = product context registry (here: greenmark · aic · eidos · reeves · unsorted).<br />
+    2. Selected pill filters every “In context” surface; badge = pending for that context.<br />
+    3. <strong>Inbox under You</strong> = all-contexts rollup; cards keep a context chip.<br />
+    4. Persist last pill; Unsorted is first-class.<br />
+    5. See <code>../TECHNIQUE.md</code> for the agent recipe.<br /><br />
+    Dogfood origin: Knox Approve You + Contexts · Hostkey vault NS <code>contexts</code> as SoT for pill list.
+  </div>
+
+  <script>
+    const CONTEXTS = [
+      { id: "greenmark", label: "Greenmark", pending: 1, keys: 42 },
+      { id: "aic", label: "AIC", pending: 0, keys: 18 },
+      { id: "eidos", label: "Eidos", pending: 2, keys: 61 },
+      { id: "reeves", label: "Reeves", pending: 0, keys: 24 },
+      { id: "unsorted", label: "Unsorted", pending: 0, keys: 105 },
+    ];
+
+    const DATA = {
+      greenmark: {
+        approvals: [
+          { t: "Cerebro warehouse query", m: "agent · bronze verify · 2m ago" },
+        ],
+        keys: [
+          { t: "Cerebro prod", m: "login · has password" },
+          { t: "gmux tunnel", m: "ssh · has password" },
+        ],
+        sessions: [{ t: "greenmark-ops", m: "app.greenmark… · high" }],
+      },
+      aic: {
+        approvals: [],
+        keys: [{ t: "M-Files", m: "login · has password · totp" }],
+        sessions: [],
+      },
+      eidos: {
+        approvals: [
+          { t: "ASC API write", m: "agent · knox invoke · 5m ago" },
+          { t: "Hostkey plane shell", m: "shell fence · 12m ago" },
+        ],
+        keys: [
+          { t: "Apple ASC", m: "login · has password" },
+          { t: "Hostkey SSH", m: "key · has password" },
+        ],
+        sessions: [{ t: "apple-asc", m: "appstoreconnect… · high" }],
+      },
+      reeves: {
+        approvals: [],
+        keys: [{ t: "Gmail personal", m: "login · has password" }],
+        sessions: [],
+      },
+      unsorted: {
+        approvals: [],
+        keys: [
+          { t: "mystery-api-key", m: "kind · no context yet" },
+          { t: "old-keeper-import", m: "login · clean the bin" },
+        ],
+        sessions: [{ t: "dogfood-example", m: "example.com · high" }],
+      },
+    };
+
+    let ctx = "eidos";
+    let nav = "approvals";
+    let phoneTab = "inbox";
+
+    function setCtx(id) {
+      ctx = id;
+      render();
+    }
+    function setNav(id) {
+      nav = id;
+      document.querySelectorAll(".side-item").forEach((el) => {
+        el.classList.toggle("active", el.dataset.nav === id);
+      });
+      render();
+    }
+    function setPhoneTab(id) {
+      phoneTab = id;
+      document.querySelectorAll(".tab").forEach((el) => {
+        el.classList.toggle("on", el.dataset.ptab === id);
+      });
+      render();
+    }
+
+    function pillsHTML(prefix) {
+      return CONTEXTS.map((c) => {
+        const on = c.id === ctx ? "on" : "";
+        const uns = c.id === "unsorted" ? "unsorted" : "";
+        const n = c.pending > 0 ? `<span class="n">${c.pending}</span>` : "";
+        return `<button type="button" class="pill ${on} ${uns}" onclick="setCtx('${c.id}')">${c.label}${n ? " " + n : ""}</button>`;
+      }).join("");
+    }
+
+    function cards(list, empty) {
+      if (!list || !list.length) return `<div class="empty">${empty}</div>`;
+      return list
+        .map(
+          (x) =>
+            `<div class="card"><div class="t">${x.t}<span class="chip">${CONTEXTS.find((c) => c.id === ctx).label}</span></div><div class="m">${x.m}</div></div>`
+        )
+        .join("");
+    }
+
+    function macPage() {
+      const c = DATA[ctx];
+      const name = CONTEXTS.find((x) => x.id === ctx).label;
+      if (nav === "inbox") {
+        const all = [];
+        CONTEXTS.forEach((cx) => {
+          (DATA[cx.id].approvals || []).forEach((a) =>
+            all.push({ ...a, ctx: cx.label })
+          );
+        });
+        return `
+          <div class="page-h"><h2>Inbox</h2><span class="sub">You · all contexts</span></div>
+          ${all
+            .map(
+              (x) =>
+                `<div class="card"><div class="t">${x.t}<span class="chip">${x.ctx}</span></div><div class="m">${x.m}</div></div>`
+            )
+            .join("") || '<div class="empty">No pending</div>'}
+        `;
+      }
+      if (nav === "device") {
+        return `
+          <div class="page-h"><h2>Device</h2><span class="sub">You · this Mac</span></div>
+          <div class="card"><div class="t">Plane</div><div class="m">knox.eidosagi.com · healthy · enrolled</div></div>
+          <div class="card"><div class="t">Contexts registry</div><div class="m">Hostkey vault NS contexts · source plane</div></div>
+        `;
+      }
+      const titles = {
+        approvals: "Approvals",
+        keys: "Keys",
+        sessions: "Sessions",
+        profiles: "Profiles",
+        docs: "Documents",
+        history: "History",
+      };
+      const h = titles[nav] || nav;
+      let body = "";
+      if (nav === "approvals") body = cards(c.approvals, `No pending in ${name}`);
+      else if (nav === "keys") body = cards(c.keys, `No keys in ${name}`);
+      else if (nav === "sessions") body = cards(c.sessions, `No sessions in ${name}`);
+      else body = `<div class="empty">${h} for ${name} — mock empty</div>`;
+      return `
+        <div class="page-h"><h2>${h}</h2><span class="sub">Context · ${name}</span></div>
+        ${body}
+      `;
+    }
+
+    function phonePage() {
+      const name = CONTEXTS.find((x) => x.id === ctx).label;
+      if (phoneTab === "you") {
+        return `
+          <div class="page-h"><h2>You</div>
+          <div class="card"><div class="t">Paired</div><div class="m">Face ID · plane healthy</div></div>
+          <div class="card"><div class="t">Contexts</div><div class="m">from Hostkey · ${CONTEXTS.length} pills</div></div>
+        `;
+      }
+      if (phoneTab === "keys") {
+        return `
+          <div class="page-h"><h2>Keys</h2><span class="sub">${name}</span></div>
+          ${cards(DATA[ctx].keys, "No keys")}
+        `;
+      }
+      // inbox: show context-filtered pending, note strip is the chooser
+      return `
+        <div class="page-h"><h2>Inbox</h2><span class="sub">${name}</span></div>
+        ${cards(DATA[ctx].approvals, `Quiet in ${name}`)}
+      `;
+    }
+
+    function render() {
+      document.getElementById("mac-strip").innerHTML =
+        `<span class="strip-label">Context</span>` + pillsHTML("mac");
+      document.getElementById("phone-strip").innerHTML = pillsHTML("ph");
+      document.getElementById("mac-content").innerHTML = macPage();
+      document.getElementById("phone-content").innerHTML = phonePage();
+      const total = CONTEXTS.reduce((s, c) => s + c.pending, 0);
+      const b = document.getElementById("inbox-badge");
+      if (b) b.textContent = String(total);
+    }
+    render();
+  </script>
+</body>
+</html>
