@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Acme UI — reference frontends for humans watching agents work</title>
-<meta name="description" content="A public work-in-progress gallery of agent-chat UI demos: calm, legible, brand-neutral reference implementations.">
+<title>Acme UI — one chat frontend, grown in public</title>
+<meta name="description" content="A public version ladder of an agent-chat frontend: v0 to v200+, each version fixing one named failure. Filter by theme, click any rung, watch the growth.">
 <style>
   /* Acme placeholder brand — swap these tokens to re-skin everything. */
   :root {
@@ -15,145 +15,163 @@
     --line: #e4e2dd;
     --accent: #0d5c4d;
     --accent-ink: #ffffff;
-    --badge-live-bg: #0d5c4d;
-    --badge-live-ink: #ffffff;
     --badge-wip-bg: #f0ede6;
     --badge-wip-ink: #6b6a66;
     --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     --sans: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    --radius: 6px;
-    --gap: 1.25rem;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #141413;
-      --surface: #1d1c1b;
-      --ink: #ececea;
-      --ink-soft: #98968f;
-      --line: #2e2d2a;
-      --accent: #4fb39a;
-      --accent-ink: #10201b;
-      --badge-live-bg: #4fb39a;
-      --badge-live-ink: #10201b;
-      --badge-wip-bg: #262523;
-      --badge-wip-ink: #98968f;
+      --bg: #141413; --surface: #1d1c1b; --ink: #ececea; --ink-soft: #98968f;
+      --line: #2e2d2a; --accent: #4fb39a; --accent-ink: #10201b;
+      --badge-wip-bg: #262523; --badge-wip-ink: #98968f;
     }
   }
   * { box-sizing: border-box; margin: 0; }
   body {
     background: var(--bg); color: var(--ink);
     font-family: var(--sans); line-height: 1.55;
-    max-width: 72rem; margin: 0 auto; padding: 3rem 1.5rem 4rem;
+    max-width: 52rem; margin: 0 auto; padding: 2.5rem 1.5rem 4rem;
   }
-  header { margin-bottom: 2.5rem; }
-  .wordmark {
-    font-family: var(--mono); font-size: 1rem; letter-spacing: .12em;
-    text-transform: uppercase; color: var(--accent); font-weight: 700;
-  }
-  h1 { font-size: 1.9rem; line-height: 1.2; margin: .6rem 0 .5rem; max-width: 42rem; }
-  .sub { color: var(--ink-soft); max-width: 42rem; }
-  .wip {
-    display: inline-block; margin-top: 1rem; font-family: var(--mono);
-    font-size: .75rem; border: 1px solid var(--line); border-radius: 999px;
-    padding: .2rem .7rem; color: var(--ink-soft);
-  }
-  .grid {
-    display: grid; gap: var(--gap);
-    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-    margin-top: 2rem;
-  }
-  .card {
-    background: var(--surface); border: 1px solid var(--line);
-    border-radius: var(--radius); padding: 1.25rem;
-    display: flex; flex-direction: column; gap: .55rem;
-    text-decoration: none; color: inherit;
-  }
-  a.card:hover { border-color: var(--accent); }
-  .card .num { font-family: var(--mono); font-size: .75rem; color: var(--ink-soft); }
-  .card h2 { font-size: 1.05rem; }
-  .card p { font-size: .9rem; color: var(--ink-soft); flex: 1; }
-  .badge {
-    align-self: flex-start; font-family: var(--mono); font-size: .68rem;
-    letter-spacing: .06em; text-transform: uppercase;
-    padding: .18rem .55rem; border-radius: 999px;
-    background: var(--badge-wip-bg); color: var(--badge-wip-ink);
-  }
-  .badge.live { background: var(--badge-live-bg); color: var(--badge-live-ink); }
-  section.about { margin-top: 3rem; border-top: 1px solid var(--line); padding-top: 1.5rem;
-    color: var(--ink-soft); font-size: .9rem; max-width: 42rem; }
+  .wordmark { font-family: var(--mono); font-size: 1rem; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--accent); font-weight: 700; }
+  h1 { font-size: 1.7rem; line-height: 1.2; margin: .5rem 0 .4rem; }
+  .sub { color: var(--ink-soft); max-width: 40rem; }
+  nav.pills { display: flex; flex-wrap: wrap; gap: .45rem; margin: 1.5rem 0 1.25rem;
+    position: sticky; top: 0; background: var(--bg); padding: .6rem 0; z-index: 2; }
+  .pill { font-family: var(--mono); font-size: .75rem; padding: .28rem .75rem;
+    border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
+    color: var(--ink-soft); cursor: pointer; }
+  .pill.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  ol.ladder { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .45rem; }
+  .rung { display: flex; gap: .9rem; align-items: baseline; padding: .55rem .8rem;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--surface);
+    text-decoration: none; color: inherit; }
+  a.rung:hover { border-color: var(--accent); }
+  .rung.planned { opacity: .62; }
+  .rung .v { font-family: var(--mono); font-weight: 700; color: var(--accent);
+    min-width: 2.9rem; }
+  .rung .body { flex: 1; }
+  .rung .title { font-weight: 600; font-size: .95rem; }
+  .rung .desc { font-size: .85rem; color: var(--ink-soft); }
+  .rung .tags { font-family: var(--mono); font-size: .65rem; color: var(--ink-soft); }
+  .rung .status { font-family: var(--mono); font-size: .65rem; text-transform: uppercase;
+    letter-spacing: .06em; padding: .14rem .5rem; border-radius: 999px;
+    background: var(--badge-wip-bg); color: var(--badge-wip-ink); white-space: nowrap; }
+  .rung .status.live { background: var(--accent); color: var(--accent-ink); }
+  .tail { margin-top: 1rem; font-family: var(--mono); font-size: .8rem; color: var(--ink-soft); }
+  section.about { margin-top: 2.5rem; border-top: 1px solid var(--line); padding-top: 1.25rem;
+    color: var(--ink-soft); font-size: .9rem; max-width: 40rem; }
   section.about a { color: var(--accent); }
-  footer { margin-top: 2.5rem; font-family: var(--mono); font-size: .75rem; color: var(--ink-soft); }
+  footer { margin-top: 2rem; font-family: var(--mono); font-size: .75rem; color: var(--ink-soft); }
   footer a { color: inherit; }
 </style>
 </head>
 <body>
 <header>
   <div class="wordmark">Acme UI</div>
-  <h1>Reference frontends for humans watching agents work.</h1>
-  <p class="sub">Live demos of the interaction grain that makes agent chat feel
-  great — realtime, legible, calm. Each demo is a scripted agent turn you can
-  watch and interrupt: informed, never overwhelmed. Brand-neutral by design;
-  every color and size is a token you can swap.</p>
-  <span class="wip">work in progress — demos land here as they pass their checklists</span>
+  <h1>One chat frontend, grown in public.</h1>
+  <p class="sub">The same scripted agent, rebuilt version by version — each rung
+  fixes one named failure on the road to a frontend where you feel
+  super-informed about what the agent is doing and never overwhelmed. Every
+  version stays online. The point is the distance between them.</p>
 </header>
 
-<main class="grid">
-  <a class="card" href="demos/reference-chat/">
-    <span class="num">01</span>
-    <h2>Reference chat</h2>
-    <p>The composite: streaming turns, tool activity, stop mid-stream, a
-    recoverable error that keeps partial output. Grown in public — v0 up,
-    each version fixes a named failure.</p>
-    <span class="badge live">v0–v1 live</span>
-  </a>
-  <div class="card">
-    <span class="num">02</span>
-    <h2>Streaming grain</h2>
-    <p>Time-to-first-token, caret, token batching cadence, in-place stream
-    slot, late-token suppression after abort.</p>
-    <span class="badge">planned</span>
-  </div>
-  <div class="card">
-    <span class="num">03</span>
-    <h2>Tool disclosure</h2>
-    <p>What the agent is doing, at a glance: collapsed activity rows, parallel
-    tools, a slow tool with elapsed time, a failed tool. Depth one click away.</p>
-    <span class="badge">planned</span>
-  </div>
-  <div class="card">
-    <span class="num">04</span>
-    <h2>Interrupt &amp; resume</h2>
-    <p>Send morphs to Stop, abort keeps the partial, reconnect replays the gap
-    from the last sequence cursor.</p>
-    <span class="badge">planned</span>
-  </div>
-  <div class="card">
-    <span class="num">05</span>
-    <h2>Approval card</h2>
-    <p>Human-in-the-loop: a dangerous tool call renders an approve/deny card
-    inline and the agent stays blocked until you decide.</p>
-    <span class="badge">planned</span>
-  </div>
-  <div class="card">
-    <span class="num">06</span>
-    <h2>Scroll pin</h2>
-    <p>Auto-follow while pinned, unpin the moment you scroll up, jump-to-latest
-    when new content arrives below.</p>
-    <span class="badge">planned</span>
-  </div>
-</main>
+<nav class="pills" id="pills"></nav>
+
+<ol class="ladder" id="ladder"></ol>
+<p class="tail">…the ladder keeps going — v200 and beyond, one failure per rung,
+as far as the craft demands.</p>
 
 <section class="about">
-  <p>Acme UI is the public example gallery of
-  <a href="https://github.com/eidos-agi/ui-patterns">eidos-agi/ui-patterns</a> —
-  a design memory for agent-chat frontends. Demos are built from
-  self-contained briefs with acceptance checklists; a demo goes live here only
-  when its checklist passes on the running artifact. Source for this site:
-  <a href="https://github.com/eidos-agi/acme-ui">eidos-agi/acme-ui</a>.</p>
+  <p>Versions advance against the acceptance checklist in
+  <a href="https://github.com/eidos-agi/ui-patterns/blob/main/briefs/01-reference-chat-demo.md">brief 01</a>
+  of <a href="https://github.com/eidos-agi/ui-patterns">eidos-agi/ui-patterns</a>.
+  Every version talks to the same
+  <a href="https://github.com/eidos-agi/acme-ui/blob/master/demos/mock-ai/v1.js">mock agent</a>
+  speaking chat-events v1.1 — abort semantics and late-token traps included.
+  The agent never changes; only the frontend grows up. Acme is a placeholder
+  brand: every color and size is a token you can swap.
+  Source: <a href="https://github.com/eidos-agi/acme-ui">eidos-agi/acme-ui</a>.</p>
 </section>
 
 <footer>
   <a href="https://eidosagi.com">eidos agi</a> · acme is a placeholder brand — that's the point
 </footer>
+
+<script>
+// The ladder is data. Ship a version → flip live:true, set href, append the
+// next planned rungs. Tags drive the filter pills automatically.
+const VERSIONS = [
+  { v: 0,  live: true,  href: "demos/reference-chat/v0/",
+    title: "The naive baseline",
+    desc: "Text streams, tools run — raw output dumps inline, the view yanks while you read, no Stop. Feel what 'overwhelmed' means.",
+    tags: ["streaming"] },
+  { v: 1,  live: true,  href: "demos/reference-chat/v1/",
+    title: "Control",
+    desc: "Send morphs to Stop in the same slot, abort keeps the partial (marked, not erased), late events for the dead turn are dropped.",
+    tags: ["control"] },
+  { v: 2,  title: "Tool disclosure", desc: "Tool activity becomes collapsed rows with live state — depth one click away, never forced.", tags: ["disclosure"] },
+  { v: 3,  title: "Scroll pin", desc: "Auto-follow while pinned, unpin on scroll-up, jump-to-latest when new content arrives below.", tags: ["scroll"] },
+  { v: 4,  title: "Calm errors", desc: "Recoverable error renders small and inline, partial output survives, the turn finishes after recovery.", tags: ["errors"] },
+  { v: 5,  title: "Thinking + TTFT", desc: "No dead air after send: thinking indicator until first token, time-to-first-token slot.", tags: ["streaming"] },
+  { v: 6,  title: "Elapsed on slow tools", desc: "A long-running tool shows live elapsed time so silence never reads as a hang.", tags: ["disclosure"] },
+  { v: 7,  title: "Safe markdown stream", desc: "Markdown renders progressively in the stream without XSS or half-open element flicker.", tags: ["markdown","streaming"] },
+  { v: 8,  title: "Stream grain", desc: "Caret, token batching cadence, in-place stream slot — the texture that makes streaming feel alive.", tags: ["streaming"] },
+  { v: 9,  title: "Composer ergonomics", desc: "Composer grows with content; Enter sends, Shift-Enter breaks; keys never surprise.", tags: ["composer"] },
+  { v: 10, title: "Optimistic send", desc: "The user message appears instantly; a send failure marks it inline with retry — no lost drafts.", tags: ["composer","errors"] },
+  { v: 11, title: "Approval card", desc: "A dangerous tool call renders an approve/deny card inline; the agent blocks until you decide. Needs mock v2.", tags: ["approvals"] },
+  { v: 12, title: "Danger grading", desc: "Approval cards grade by danger; safe tools flow, risky ones wait — trust without friction.", tags: ["approvals"] },
+  { v: 13, title: "Reconnect + replay", desc: "Connection drops mid-turn; the client resumes from its last seq and the gap replays. Needs mock v2.", tags: ["resume"] },
+  { v: 14, title: "Thread isolation", desc: "Switching threads mid-stream: drafts are per-thread, streams stay isolated, nothing bleeds.", tags: ["threads"] },
+  { v: 15, title: "Screen-reader-safe streaming", desc: "Live region announces the stream sanely — no token-by-token spam for AT users.", tags: ["a11y","streaming"] },
+  { v: 16, title: "Focus discipline", desc: "Focus returns to the composer after actions; full keyboard traversal of the transcript.", tags: ["a11y"] },
+  { v: 17, title: "Hover without shift", desc: "Message actions appear on hover without layout shift or content jumping.", tags: ["polish"] },
+  { v: 18, title: "Parallel tools", desc: "Multiple tools in flight render as parallel rows, each with its own state.", tags: ["disclosure"] },
+  { v: 19, title: "Oversized results", desc: "Huge tool output stays behind a reference (content_full_ref) — summary inline, full view on demand.", tags: ["disclosure"] },
+  { v: 20, title: "Task tree", desc: "Sub-agents and nested work render as a collapsible tree of what's running under the hood.", tags: ["disclosure"] },
+  { v: 21, title: "Artifact pane", desc: "Generated documents open in a side pane; chat stays chat, the artifact gets room.", tags: ["layout"] },
+  { v: 22, title: "Selection-scoped edit", desc: "Select part of an artifact, ask for a change scoped to the selection.", tags: ["layout"] },
+  { v: 23, title: "Mobile ergonomics", desc: "The whole ladder at thumb scale: keyboard avoidance, safe areas, touch targets.", tags: ["mobile"] },
+  { v: 24, title: "Long-transcript performance", desc: "Ten thousand messages, still 60fps: virtualized transcript, cheap streaming paints.", tags: ["performance"] },
+];
+
+const pillsEl = document.getElementById("pills");
+const ladderEl = document.getElementById("ladder");
+const tags = ["all", "live", ...[...new Set(VERSIONS.flatMap(x => x.tags))]];
+let active = "all";
+
+function renderPills() {
+  pillsEl.innerHTML = "";
+  for (const t of tags) {
+    const b = document.createElement("button");
+    b.className = "pill" + (t === active ? " on" : "");
+    b.textContent = t;
+    b.onclick = () => { active = t; renderPills(); renderLadder(); };
+    pillsEl.appendChild(b);
+  }
+}
+
+function renderLadder() {
+  ladderEl.innerHTML = "";
+  for (const x of VERSIONS) {
+    if (active === "live" && !x.live) continue;
+    if (active !== "all" && active !== "live" && !x.tags.includes(active)) continue;
+    const el = document.createElement(x.live ? "a" : "div");
+    el.className = "rung" + (x.live ? "" : " planned");
+    if (x.live) el.href = x.href;
+    el.innerHTML =
+      '<span class="v">v' + x.v + '</span>' +
+      '<span class="body"><span class="title">' + x.title + '</span> ' +
+      '<span class="desc">— ' + x.desc + '</span> ' +
+      '<span class="tags">' + x.tags.join(" · ") + '</span></span>' +
+      '<span class="status' + (x.live ? " live" : "") + '">' + (x.live ? "live" : "planned") + '</span>';
+    ladderEl.appendChild(el);
+  }
+}
+
+renderPills();
+renderLadder();
+</script>
 </body>
 </html>
