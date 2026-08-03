@@ -62,6 +62,14 @@ Nobody should have to narrate fixes one by one:
 Founder feedback, when it does arrive, is captured the same way: as a rung in
 `planned.json`, never as an in-place patch to a shipped version.
 
+## Cache busting
+
+Cloudflare caches `.css`/`.js` by extension and the API token cannot purge.
+Shared assets are therefore referenced with a version stamp
+(`/brand.css?v=N`). When you change ANY retroactive shared file, bump the
+stamp in every HTML reference (one sed) — the HTML itself is not edge-cached,
+so the new URLs take effect on the next pull.
+
 ## Copy markdown
 
 The shell's Copy markdown button assembles the full pack for an implementing
