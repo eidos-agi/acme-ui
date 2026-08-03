@@ -86,14 +86,32 @@
   body.showing #welcome { display: none; }
   body.showing #pane { display: block; }
 
-  /* countdown veil: big pie, 100% -> 0, then the demo plays itself */
-  #veil { position: absolute; inset: 0; background: var(--bg); display: none;
-    align-items: center; justify-content: center; flex-direction: column; gap: 1.2rem;
-    z-index: 5; }
-  #veil.on { display: flex; }
-  #pie { width: 11rem; height: 11rem; border-radius: 50%;
-    background: conic-gradient(var(--accent) 100%, var(--line) 0); }
-  #pienum { font-family: var(--mono); font-size: 2rem; font-weight: 700; color: var(--accent); }
+  /* countdown veil: 3d pie fades in, 100% -> 0, then the demo plays itself */
+  #veil { position: absolute; inset: 0; background: var(--bg); display: flex;
+    align-items: center; justify-content: center; flex-direction: column; gap: 1.6rem;
+    z-index: 5; opacity: 0; visibility: hidden;
+    transition: opacity .45s ease, visibility .45s; }
+  #veil.on { opacity: 1; visibility: visible; }
+  #piewrap { perspective: 900px; }
+  #pie { width: 14rem; height: 14rem; border-radius: 50%;
+    background: conic-gradient(var(--accent) 100%, var(--line) 0);
+    transform: rotateX(52deg);
+    box-shadow:
+      0 2px 0 color-mix(in srgb, var(--accent) 55%, black),
+      0 4px 0 color-mix(in srgb, var(--accent) 50%, black),
+      0 6px 0 color-mix(in srgb, var(--accent) 45%, black),
+      0 8px 0 color-mix(in srgb, var(--accent) 40%, black),
+      0 10px 0 color-mix(in srgb, var(--accent) 35%, black),
+      0 12px 0 color-mix(in srgb, var(--accent) 30%, black),
+      0 30px 38px rgba(0,0,0,.35);
+    position: relative; }
+  #pie::after { content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: radial-gradient(ellipse at 32% 24%, rgba(255,255,255,.28), transparent 55%); }
+  #veil.on #piewrap { animation: pierise .55s ease-out; }
+  @keyframes pierise {
+    from { opacity: 0; transform: translateY(18px) scale(.9); }
+    to   { opacity: 1; transform: translateY(0) scale(1); } }
+  #pienum { font-family: var(--mono); font-size: 2.1rem; font-weight: 700; color: var(--accent); }
   #vielabel { color: var(--ink-soft); font-size: .9rem; }
 
   /* right code panel */
@@ -118,6 +136,7 @@
 <body>
 <div id="side">
   <div class="wordmark"><a href="#" id="home">Acme UI</a></div>
+  <a class="item" href="#" id="homebtn" style="margin-bottom:.6rem">🏠&ensp;Home</a>
   <nav class="pills" id="pills"></nav>
   <div id="famlist"></div>
   <div class="sidelinks">
@@ -147,7 +166,7 @@
       are CSS tokens you can swap.</p>
     </div>
   </div>
-  <div id="veil"><div id="pie"></div><div id="pienum">100%</div>
+  <div id="veil"><div id="piewrap"><div id="pie"></div></div><div id="pienum">100%</div>
     <div id="vielabel">loading the demo, then it plays itself</div></div>
   <iframe id="pane" title="demo"></iframe>
 </div>
@@ -313,6 +332,7 @@ function applyHash() {
   const prev = selected;
   selected = item;
   document.body.classList.toggle("showing", !!item);
+  document.getElementById("homebtn").classList.toggle("current", !item);
   if (item) {
     const target = item.href + (item.auto ? "?autoplay=1" : "");
     if (!prev || prev.href !== item.href) {
@@ -328,6 +348,7 @@ function applyHash() {
 }
 
 document.getElementById("home").onclick = (e) => { e.preventDefault(); location.hash = ""; };
+document.getElementById("homebtn").onclick = (e) => { e.preventDefault(); location.hash = ""; };
 window.addEventListener("hashchange", applyHash);
 
 (async function boot() {
