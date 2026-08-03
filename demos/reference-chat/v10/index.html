@@ -129,12 +129,14 @@ function drainAll() {    // used on terminal events: no text left behind
   if (current) current.classList.remove("streaming");
 }
 function pump() {
-  if (!buf || !current) { pumping = false; if (current) current.classList.remove("streaming"); return; }
+  // buffer may drain between network chunks; the .streaming class (and its
+  // caret) stays for the whole stream — only drainAll removes it, so nothing
+  // flickers while the agent is still talking
+  if (!buf || !current) { pumping = false; return; }
   const take = buf.slice(0, 3);
   buf = buf.slice(3);
   current.dataset.raw = (current.dataset.raw || "") + take;
   current.innerHTML = mdRender(current.dataset.raw);
-  current.classList.add("streaming");
   follow();
   requestAnimationFrame(pump);
 }
@@ -297,6 +299,7 @@ function onEvent(ev) {
   } else if (ev.type === "text") {
     if (!current) current = add("assistant", "");
     current.classList.add("md");
+    current.classList.add("streaming");
     buf += ev.text;
     if (!pumping) { pumping = true; requestAnimationFrame(pump); }
   } else if (ev.type === "tool_use") {
