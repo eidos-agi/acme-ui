@@ -1,13 +1,5 @@
 [
  {
-  "v": 4,
-  "title": "Scroll pin",
-  "desc": "The view follows new output only while you are at the bottom. Scrolling up stops the following; a button jumps back to the latest message.",
-  "tags": [
-   "scroll"
-  ]
- },
- {
   "v": 5,
   "title": "Calm errors",
   "desc": "A recoverable error shows as a small inline note. Partial output stays, and the turn continues after recovery.",

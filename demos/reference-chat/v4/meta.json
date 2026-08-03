@@ -1,0 +1,9 @@
+{
+ "title": "Scroll pin",
+ "desc": "The view follows new output only while you are at the bottom. Scrolling up stops the following; a jump-to-latest button appears when new content arrives below.",
+ "why": "Reading back mid-stream is the most common chat action, and most UIs punish it by yanking the view. Pinning is a 15-line fix.",
+ "tags": [
+  "scroll"
+ ],
+ "auto": true
+}
