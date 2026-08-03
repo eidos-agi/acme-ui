@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Acme UI — one chat frontend, grown in public</title>
-<meta name="description" content="A public version ladder of an agent-chat frontend: v0 to v200+, each version fixing one named failure. Filter by theme, click any rung, watch the growth.">
+<meta name="description" content="An agent-chat frontend rebuilt version by version, v0 to v200+. Each version fixes one named problem. Every version stays online.">
 <style>
   /* Acme placeholder brand — swap these tokens to re-skin everything. */
   :root {
@@ -71,32 +71,32 @@
 <header>
   <div class="wordmark">Acme UI</div>
   <h1>One chat frontend, grown in public.</h1>
-  <p class="sub">The same scripted agent, rebuilt version by version — each rung
-  fixes one named failure on the road to a frontend where you feel
-  super-informed about what the agent is doing and never overwhelmed. Every
-  version stays online. The point is the distance between them.</p>
+  <p class="sub">A chat frontend for talking to an AI agent, rebuilt version by
+  version. Each version fixes one named problem. Every version stays online so
+  you can click through and compare.</p>
 </header>
 
 <nav class="pills" id="pills"></nav>
 
 <ol class="ladder" id="ladder"></ol>
-<p class="tail">…the ladder keeps going — v200 and beyond, one failure per rung,
-as far as the craft demands.</p>
+<p class="tail">More versions get added as they ship. v200 or beyond if it
+takes that many.</p>
 
 <section class="about">
-  <p>Versions advance against the acceptance checklist in
+  <p>Versions are checked against the acceptance list in
   <a href="https://github.com/eidos-agi/ui-patterns/blob/main/briefs/01-reference-chat-demo.md">brief 01</a>
   of <a href="https://github.com/eidos-agi/ui-patterns">eidos-agi/ui-patterns</a>.
   Every version talks to the same
-  <a href="https://github.com/eidos-agi/acme-ui/blob/master/demos/mock-ai/v1.js">mock agent</a>
-  speaking chat-events v1.1 — abort semantics and late-token traps included.
-  The agent never changes; only the frontend grows up. Acme is a placeholder
-  brand: every color and size is a token you can swap.
+  <a href="https://github.com/eidos-agi/acme-ui/blob/master/demos/mock-ai/v1.js">mock agent</a>,
+  a scripted server that speaks chat-events v1.1, including abort and
+  late-event edge cases. The agent code never changes between versions; only
+  the frontend does. Acme is a placeholder brand. Colors and sizes are CSS
+  tokens you can swap.
   Source: <a href="https://github.com/eidos-agi/acme-ui">eidos-agi/acme-ui</a>.</p>
 </section>
 
 <footer>
-  <a href="https://eidosagi.com">eidos agi</a> · acme is a placeholder brand — that's the point
+  <a href="https://eidosagi.com">eidos agi</a> · acme is a placeholder brand
 </footer>
 
 <script>
@@ -105,39 +105,42 @@ as far as the craft demands.</p>
 const VERSIONS = [
   { v: 0,  live: true,  href: "demos/reference-chat/v0/",
     title: "The naive baseline",
-    desc: "Text streams, tools run — raw output dumps inline, the view yanks while you read, no Stop. Feel what 'overwhelmed' means.",
+    desc: "Text streams and tools run, but raw output dumps inline, the view jumps while you read, and there is no Stop button.",
     tags: ["streaming"] },
   { v: 1,  live: true,  href: "demos/reference-chat/v1/",
     title: "Control",
-    desc: "Send morphs to Stop in the same slot, abort keeps the partial (marked, not erased), late events for the dead turn are dropped.",
+    desc: "Send turns into Stop while the agent works. Stopping keeps the partial response, and events that arrive after a stop are ignored.",
     tags: ["control"] },
   { v: 2,  live: true,  href: "demos/reference-chat/v2/",
     title: "Who's talking",
-    desc: "Your words in your color on the right; the agent's on the left, ending before yours begin. Speaker identity at a glance — born from founder feedback on v1.",
+    desc: "User messages are colored and sit on the right. Agent messages sit on the left and end before the user's edge, so you can tell who said what.",
     tags: ["design"] },
-  { v: 3,  title: "Tool disclosure", desc: "Tool activity becomes collapsed rows with live state — depth one click away, never forced.", tags: ["disclosure"] },
-  { v: 4,  title: "Scroll pin", desc: "Auto-follow while pinned, unpin on scroll-up, jump-to-latest when new content arrives below.", tags: ["scroll"] },
-  { v: 5,  title: "Calm errors", desc: "Recoverable error renders small and inline, partial output survives, the turn finishes after recovery.", tags: ["errors"] },
-  { v: 6,  title: "Thinking + TTFT", desc: "No dead air after send: thinking indicator until first token, time-to-first-token slot.", tags: ["streaming"] },
-  { v: 7,  title: "Elapsed on slow tools", desc: "A long-running tool shows live elapsed time so silence never reads as a hang.", tags: ["disclosure"] },
-  { v: 8,  title: "Safe markdown stream", desc: "Markdown renders progressively in the stream without XSS or half-open element flicker.", tags: ["markdown","streaming"] },
-  { v: 9,  title: "Stream grain", desc: "Caret, token batching cadence, in-place stream slot — the texture that makes streaming feel alive.", tags: ["streaming"] },
-  { v: 10, title: "Composer ergonomics", desc: "Composer grows with content; Enter sends, Shift-Enter breaks; keys never surprise.", tags: ["composer"] },
-  { v: 11, title: "Optimistic send", desc: "The user message appears instantly; a send failure marks it inline with retry — no lost drafts.", tags: ["composer","errors"] },
-  { v: 12, title: "Approval card", desc: "A dangerous tool call renders an approve/deny card inline; the agent blocks until you decide. Needs mock v2.", tags: ["approvals"] },
-  { v: 13, title: "Danger grading", desc: "Approval cards grade by danger; safe tools flow, risky ones wait — trust without friction.", tags: ["approvals"] },
-  { v: 14, title: "Reconnect + replay", desc: "Connection drops mid-turn; the client resumes from its last seq and the gap replays. Needs mock v2.", tags: ["resume"] },
-  { v: 15, title: "Thread isolation", desc: "Switching threads mid-stream: drafts are per-thread, streams stay isolated, nothing bleeds.", tags: ["threads"] },
-  { v: 16, title: "Screen-reader-safe streaming", desc: "Live region announces the stream sanely — no token-by-token spam for AT users.", tags: ["a11y","streaming"] },
-  { v: 17, title: "Focus discipline", desc: "Focus returns to the composer after actions; full keyboard traversal of the transcript.", tags: ["a11y"] },
-  { v: 18, title: "Hover without shift", desc: "Message actions appear on hover without layout shift or content jumping.", tags: ["polish"] },
-  { v: 19, title: "Parallel tools", desc: "Multiple tools in flight render as parallel rows, each with its own state.", tags: ["disclosure"] },
-  { v: 20, title: "Oversized results", desc: "Huge tool output stays behind a reference (content_full_ref) — summary inline, full view on demand.", tags: ["disclosure"] },
-  { v: 21, title: "Task tree", desc: "Sub-agents and nested work render as a collapsible tree of what's running under the hood.", tags: ["disclosure"] },
-  { v: 22, title: "Artifact pane", desc: "Generated documents open in a side pane; chat stays chat, the artifact gets room.", tags: ["layout"] },
-  { v: 23, title: "Selection-scoped edit", desc: "Select part of an artifact, ask for a change scoped to the selection.", tags: ["layout"] },
-  { v: 24, title: "Mobile ergonomics", desc: "The whole ladder at thumb scale: keyboard avoidance, safe areas, touch targets.", tags: ["mobile"] },
-  { v: 25, title: "Long-transcript performance", desc: "Ten thousand messages, still 60fps: virtualized transcript, cheap streaming paints.", tags: ["performance"] },
+  { v: 3,  live: true,  href: "demos/reference-chat/v3/",
+    title: "Tool disclosure",
+    desc: "Tool calls render as one collapsed row: name, label, a spinner while running, then a check and duration. Click to expand the full input and result.",
+    tags: ["disclosure"] },
+  { v: 4,  title: "Scroll pin", desc: "The view follows new output only while you are at the bottom. Scrolling up stops the following; a button jumps back to the latest message.", tags: ["scroll"] },
+  { v: 5,  title: "Calm errors", desc: "A recoverable error shows as a small inline note. Partial output stays, and the turn continues after recovery.", tags: ["errors"] },
+  { v: 6,  title: "Thinking + TTFT", desc: "A thinking indicator fills the gap between pressing send and the first token arriving.", tags: ["streaming"] },
+  { v: 7,  title: "Elapsed on slow tools", desc: "Tools that run long show elapsed time while they work.", tags: ["disclosure"] },
+  { v: 8,  title: "Safe markdown stream", desc: "Markdown renders progressively during the stream, sanitized, without flicker from half-open elements.", tags: ["markdown","streaming"] },
+  { v: 9,  title: "Stream grain", desc: "A cursor caret and tuned token batching make the stream read smoothly instead of stuttering.", tags: ["streaming"] },
+  { v: 10, title: "Composer ergonomics", desc: "The input box grows with its content. Enter sends, Shift-Enter adds a line.", tags: ["composer"] },
+  { v: 11, title: "Optimistic send", desc: "The user message appears immediately on send. If sending fails, the message is marked inline with a retry option.", tags: ["composer","errors"] },
+  { v: 12, title: "Approval card", desc: "A risky tool call shows an approve/deny card in the transcript, and the agent waits for the decision. Needs mock v2.", tags: ["approvals"] },
+  { v: 13, title: "Danger grading", desc: "Approval cards vary by risk level. Safe tools run without asking; risky ones wait.", tags: ["approvals"] },
+  { v: 14, title: "Reconnect + replay", desc: "After a connection drop, the client resumes from its last sequence number and the missed events replay. Needs mock v2.", tags: ["resume"] },
+  { v: 15, title: "Thread isolation", desc: "Each thread keeps its own draft and its own stream. Switching threads mid-stream does not mix content.", tags: ["threads"] },
+  { v: 16, title: "Screen-reader-safe streaming", desc: "A live region announces streamed text at a readable rate for screen readers instead of token by token.", tags: ["a11y","streaming"] },
+  { v: 17, title: "Focus discipline", desc: "Focus returns to the input box after actions, and the transcript is fully keyboard-navigable.", tags: ["a11y"] },
+  { v: 18, title: "Hover without shift", desc: "Message actions appear on hover without shifting the layout.", tags: ["polish"] },
+  { v: 19, title: "Parallel tools", desc: "Several tools running at once render as separate rows, each with its own state.", tags: ["disclosure"] },
+  { v: 20, title: "Oversized results", desc: "Large tool output shows a short summary inline. The full content loads on demand via content_full_ref.", tags: ["disclosure"] },
+  { v: 21, title: "Task tree", desc: "Sub-agents and nested work render as a collapsible tree.", tags: ["disclosure"] },
+  { v: 22, title: "Artifact pane", desc: "Generated documents open in a side pane next to the chat.", tags: ["layout"] },
+  { v: 23, title: "Selection-scoped edit", desc: "Select part of an artifact and request a change scoped to that selection.", tags: ["layout"] },
+  { v: 24, title: "Mobile ergonomics", desc: "Keyboard avoidance, safe areas, and touch target sizes for phones.", tags: ["mobile"] },
+  { v: 25, title: "Long-transcript performance", desc: "The transcript stays smooth with thousands of messages, via virtualization.", tags: ["performance"] },
 ];
 
 const pillsEl = document.getElementById("pills");
