@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Reference chat v9 — stream grain · Eidos UI</title>
-<link rel="stylesheet" href="/brand.css?v=6">
-<link rel="stylesheet" href="/demos/reference-chat/_base.css?v=6">
+<link rel="stylesheet" href="/brand.css?v=7">
+<link rel="stylesheet" href="/demos/reference-chat/_base.css?v=7">
 <style>
   /* v3 keeps v2's speaker identity */
   .user { background: var(--accent); color: var(--accent-ink); align-self: flex-end; max-width: 85%; }
@@ -95,7 +95,7 @@
   </div>
 </form>
 
-<script src="/demos/mock-ai/v1.js?v=6"></script>
+<script src="/demos/mock-ai/v1.js?v=7"></script>
 <script>
 // v9 fixes GRAIN on top of v8: network deltas land in a buffer and a
 // requestAnimationFrame pump paints a few characters per frame, so the
@@ -129,8 +129,8 @@ function pump() {
   // caret) stays for the whole stream — only drainAll removes it, so nothing
   // flickers while the agent is still talking
   if (!buf || !current) { pumping = false; return; }
-  const take = buf.slice(0, 3);
-  buf = buf.slice(3);
+  const take = buf.slice(0, 2);   // paced to the slower mock cadence
+  buf = buf.slice(2);
   current.dataset.raw = (current.dataset.raw || "") + take;
   current.innerHTML = mdRender(current.dataset.raw);
   follow();
@@ -351,6 +351,6 @@ window.VIGNETTE = () => {
   document.getElementById("composer").requestSubmit();
 };
 </script>
-<script src="/demos/reference-chat/_autoplay.js?v=6"></script>
+<script src="/demos/reference-chat/_autoplay.js?v=7"></script>
 </body>
 </html>

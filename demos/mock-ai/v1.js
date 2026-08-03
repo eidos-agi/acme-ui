@@ -40,15 +40,15 @@ window.MockAI = (function () {
     // 1 — happy path with two tools (from ui-patterns brief 01)
     () => [
       [300, { type: "turn_start" }],
-      ...deltas("I'll scan the docs for broken links first.\n", 2, 45),
+      ...deltas("I'll scan the docs for broken links first.\n", 2, 95),
       [150, { type: "tool_use", tool_use_id: "t1", name: "bash", label: "Scan 139 markdown files for links", input: { cmd: "grep -r …" } }],
       [1800, { type: "tool_result", tool_use_id: "t1", status: "ok", metrics: { duration_ms: 1750 },
         content: "412 links found, 9 broken:\ndocs/emf/index.md → ../missing.md\npatterns/catalog.md → cross-cutting/design-not-here.md\ndocs/emf/claims/streaming.md → ../../schemas/old.json\nharvests/popular/INDEX.md → micro/chat/gone.md\npatterns/agentic-chat/README.md → micro/removed.md\nreference/VISUAL.md → ../uizze-notes.md\npatterns/CANONICAL.md → catalog-v2.md\nREADME.md → docs/emf/intents/dead.md\nAGENTS.md → TELOS-old.md" }],
-      ...deltas("Found 9 broken links. Fixing them now — 7 are the same renamed folder.\n", 2, 45),
+      ...deltas("Found 9 broken links. Fixing them now — 7 are the same renamed folder.\n", 2, 95),
       [200, { type: "tool_use", tool_use_id: "t2", name: "edit", label: "Rewrite 9 links across 4 files", input: { files: 4 } }],
       [4200, { type: "tool_result", tool_use_id: "t2", status: "ok", metrics: { duration_ms: 4100 },
         content: "4 files changed, 9 links now resolve" }],
-      ...deltas("Done — all 9 broken links fixed. 4 files touched; every link in the repo now resolves.", 2, 45),
+      ...deltas("Done — all 9 broken links fixed. 4 files touched; every link in the repo now resolves.", 2, 95),
       [300, { type: "done", result: { turns: 1, latency_ms: 9000 } }],
     ],
     // 2 — long uninterrupted stream: exists so Stop has something to interrupt
@@ -63,16 +63,16 @@ window.MockAI = (function () {
     // 3 — recoverable error that keeps partial output
     () => [
       [350, { type: "turn_start" }],
-      ...deltas("Rewriting patterns/catalog.md opening…\n", 2, 45),
+      ...deltas("Rewriting patterns/catalog.md opening…\n", 2, 95),
       [900, { type: "error", code: "file_lock", recoverable: true, text: "catalog.md is locked by another process — retrying" }],
       [1600, {}], // beat while "retrying"
-      ...deltas('Lock cleared. Opening now reads: "This repo exists to make agent-chat frontends excellent…"', 2, 45),
+      ...deltas('Lock cleared. Opening now reads: "This repo exists to make agent-chat frontends excellent…"', 2, 95),
       [400, { type: "done", result: { turns: 1, latency_ms: 4100 } }],
     ],
     // 4 — markdown-rich stream: headings, bold, list, code, link, fence
     () => [
       [350, { type: "turn_start" }],
-      ...deltas("# Release 0.8\n\nThis release focuses on **calm legibility** for agent chat.\n\n## Changes\n\n- `stop` now interrupts within one event\n- tool rows show *live elapsed time*\n- errors render as small notes — see [the ladder](https://ui.eidosagi.com/)\n\n```js\nagent.send(prompt, onEvent)\n```\n\nReady to publish.", 2, 50),
+      ...deltas("# Release 0.8\n\nThis release focuses on **calm legibility** for agent chat.\n\n## Changes\n\n- `stop` now interrupts within one event\n- tool rows show *live elapsed time*\n- errors render as small notes — see [the ladder](https://ui.eidosagi.com/)\n\n```js\nagent.send(prompt, onEvent)\n```\n\nReady to publish.", 2, 105),
       [400, { type: "done", result: { turns: 1, latency_ms: 6000 } }],
     ],
   ];
@@ -105,7 +105,7 @@ window.MockAI = (function () {
           // off-script: say so, teach the next line, don't burn a script
           script = [
             [300, { type: "turn_start" }],
-            ...deltas('I\'m a scripted demo, so I only know my rehearsed lines. Try asking: "' + want + '"', 2, 45),
+            ...deltas('I\'m a scripted demo, so I only know my rehearsed lines. Try asking: "' + want + '"', 2, 95),
             [300, { type: "done", result: { turns: 1, latency_ms: 1500 } }],
           ];
         } else {
