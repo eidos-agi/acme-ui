@@ -124,6 +124,10 @@ document.getElementById("composer").addEventListener("submit", (e) => {
   handle = agent.send("", onEvent);
 });
 
+
+// vignette: nothing to animate — speaker identity is visible the instant
+// the seeded conversation renders
+window.VIGNETTE = () => { agent.preroll(onEvent); };
 </script>
 <script src="/demos/reference-chat/_autoplay.js"></script>
 </body>

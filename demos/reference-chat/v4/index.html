@@ -196,6 +196,19 @@ document.getElementById("composer").addEventListener("submit", (e) => {
   handle = agent.send("", onEvent);
 });
 
+
+// vignette: turn 2 streams, the view scrolls up mid-stream (no yank),
+// the jump pill appears, then jumps back to latest
+window.VIGNETTE = () => {
+  agent.preroll(onEvent);
+  box.value = "Now rewrite every README";
+  document.getElementById("composer").requestSubmit();
+  setTimeout(() => { log.scrollTop = 0; }, 1300);
+  setTimeout(() => {
+    const j = document.getElementById("jump");
+    if (j.classList.contains("show")) j.click();
+  }, 3400);
+};
 </script>
 <script src="/demos/reference-chat/_autoplay.js"></script>
 </body>

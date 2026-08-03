@@ -103,6 +103,16 @@ window.MockAI = (function () {
         };
       },
       get busy() { return liveTurn !== null; },
+      // Instantly materialize turn 1 (no timers) so demos can skip straight
+      // to their addition. Next send() is turn 2, exactly as if turn 1 played.
+      preroll(onEvent) {
+        if (liveTurn !== null || turnCount > 0) return;
+        cb = onEvent;
+        turnCount = 1;
+        for (const [, ev] of TURN_SCRIPTS[0]()) {
+          if (ev.type) emit(ev, 1);
+        }
+      },
     };
   }
 

@@ -33,6 +33,11 @@ retroactive.
 3. Write `meta.json`: `title`, `desc`, `why`, `tags`, `auto` (true for chat
    demos that should self-play). Remove the rung from `planned.json` if it
    was there.
+3b. Define `window.VIGNETTE` at the end of the page script: call
+   `agent.preroll(onEvent)` to materialize the prior conversation instantly,
+   then script ONLY this version's addition (a stop, an expand, a scroll).
+   Viewers must see the new thing within seconds of the veil lifting.
+   Vignettes are presentation glue — RETROACTIVE, safe to tune later.
 4. Prove it: drive the live page (mafia or browser), assert the version's
    acceptance checks mechanically, screenshot to `~/eidos/proof/`.
 5. Push, then `ssh hostkey 'git -C ~/eidos-ui pull'`. Restart `eidosui-api`

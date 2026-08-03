@@ -173,6 +173,15 @@ document.getElementById("composer").addEventListener("submit", (e) => {
   handle = agent.send("", onEvent);
 });
 
+
+// vignette: seeded conversation, then the tool rows expand themselves so
+// the disclosure is the first thing you watch
+window.VIGNETTE = () => {
+  agent.preroll(onEvent);
+  const heads = document.querySelectorAll(".toolhead");
+  setTimeout(() => heads[0] && heads[0].click(), 800);
+  setTimeout(() => heads[1] && heads[1].click(), 1900);
+};
 </script>
 <script src="/demos/reference-chat/_autoplay.js"></script>
 </body>

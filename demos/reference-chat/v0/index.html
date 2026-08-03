@@ -87,6 +87,14 @@ document.getElementById("composer").addEventListener("submit", (e) => {
   agent.send("", onEvent);
 });
 
+
+// vignette: seed the finished turn instantly, then stream turn 2 so the
+// baseline sins (yank, dumps, no Stop) show themselves in seconds
+window.VIGNETTE = () => {
+  agent.preroll(onEvent);
+  box.value = "Now rewrite every README";
+  document.getElementById("composer").requestSubmit();
+};
 </script>
 <script src="/demos/reference-chat/_autoplay.js"></script>
 </body>

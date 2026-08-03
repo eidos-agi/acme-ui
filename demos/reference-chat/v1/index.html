@@ -119,6 +119,15 @@ document.getElementById("composer").addEventListener("submit", (e) => {
   handle = agent.send("", onEvent);
 });
 
+
+// vignette: prior turn appears instantly; turn 2 streams and Stop fires
+// mid-stream — the partial survives, late events are dropped
+window.VIGNETTE = () => {
+  agent.preroll(onEvent);
+  box.value = "Now rewrite every README";
+  document.getElementById("composer").requestSubmit();
+  setTimeout(() => { if (handle) handle.stop(); }, 1800);
+};
 </script>
 <script src="/demos/reference-chat/_autoplay.js"></script>
 </body>

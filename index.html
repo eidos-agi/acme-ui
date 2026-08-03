@@ -279,7 +279,9 @@ function runVeil(item) {
   clearInterval(veilTimer);
   veil.classList.add("on");
   const words = ((item.title || "") + " " + (item.desc || "")).split(/\s+/).length;
-  const DUR = Math.max(10000, words * 380);
+  const seenKey = "veil-seen:" + item.href;
+  const DUR = sessionStorage.getItem(seenKey) ? 4000 : Math.max(10000, words * 380);
+  sessionStorage.setItem(seenKey, "1");
   const t0 = performance.now();
   veilTimer = setInterval(() => {
     const left = Math.max(0, 1 - (performance.now() - t0) / DUR);
