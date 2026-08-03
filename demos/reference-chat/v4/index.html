@@ -200,13 +200,13 @@ document.getElementById("composer").addEventListener("submit", (e) => {
 // vignette: turn 2 streams, the view scrolls up mid-stream (no yank),
 // the jump pill appears, then jumps back to latest
 window.VIGNETTE = () => {
-  agent.preroll(onEvent, 2);
+  agent.preroll(onEvent, 4);  // four seeded turns: guaranteed deep overflow; next send is the long stream
   box.value = "Just fix the catalog opening";
   document.getElementById("composer").requestSubmit();
   // condition-driven, not timed: unpin once there is real overflow to
   // scroll back through, then jump once the pill has had a beat on screen
   const un = setInterval(() => {
-    if (log.scrollHeight - log.clientHeight > 200) {
+    if (log.scrollHeight - log.clientHeight > 150) {
       clearInterval(un);
       log.scrollTop = 0;
       setTimeout(() => {
