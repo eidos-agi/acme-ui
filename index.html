@@ -95,6 +95,11 @@
     z-index: 5; opacity: 0; visibility: hidden;
     transition: opacity .45s ease, visibility .45s; }
   #veil.on { opacity: 1; visibility: visible; }
+  #pierow { display: flex; align-items: center; gap: 2.2rem; }
+  #skip { font: inherit; font-family: var(--mono); font-size: .8rem;
+    padding: .45rem .9rem; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--surface); color: var(--ink-soft); cursor: pointer; }
+  #skip:hover { border-color: var(--accent); color: var(--accent); }
   #piewrap { perspective: 900px; }
   #pie { width: 14rem; height: 14rem; border-radius: 50%;
     background: conic-gradient(var(--accent) 100%, var(--line) 0);
@@ -173,7 +178,8 @@
       are CSS tokens you can swap.</p>
     </div>
   </div>
-  <div id="veil"><div id="piewrap"><div id="pie"></div></div><div id="pienum">100%</div>
+  <div id="veil"><div id="pierow"><div id="piewrap"><div id="pie"></div></div>
+    <button id="skip">Skip &rarr;</button></div><div id="pienum">100%</div>
     <div id="wn"><div class="wnh">What's New:</div><div class="wnt" id="wnt"></div>
     <div class="wnd" id="wnd"></div></div></div>
   <iframe id="pane" title="demo"></iframe>
@@ -278,20 +284,29 @@ function renderDetail() {
 
 function renderAll() { renderPills(); renderSidebar(); renderDetail(); }
 
-// countdown pie: 100% -> 0 over 2.2s while the iframe loads underneath;
-// demos started with ?autoplay=1 run their own turn right after the veil.
-function runVeil() {
+// countdown pie: at least 10s, longer if What's New takes longer to read.
+// Skip ends it early. Either way the demo is told to play itself only when
+// the veil actually lifts (postMessage), so autoplay never races the pie.
+function endVeil() {
+  clearInterval(veilTimer);
+  veil.classList.remove("on");
+  try { pane.contentWindow.postMessage("acme-play", "*"); } catch {}
+}
+function runVeil(item) {
   clearInterval(veilTimer);
   veil.classList.add("on");
-  const t0 = performance.now(), DUR = 2200;
+  const words = ((item.title || "") + " " + (item.desc || "")).split(/\s+/).length;
+  const DUR = Math.max(10000, words * 380);
+  const t0 = performance.now();
   veilTimer = setInterval(() => {
     const left = Math.max(0, 1 - (performance.now() - t0) / DUR);
     const pct = Math.round(left * 100);
     pie.style.background = "conic-gradient(var(--accent) " + pct + "%, var(--line) 0)";
     pienum.textContent = pct + "%";
-    if (left <= 0) { clearInterval(veilTimer); veil.classList.remove("on"); }
+    if (left <= 0) endVeil();
   }, 40);
 }
+document.getElementById("skip").onclick = endVeil;
 
 function loadCode(x) {
   document.getElementById("codetitle").textContent = "v" + x.v + " — " + x.title;
@@ -347,7 +362,7 @@ function applyHash() {
       document.getElementById("wnt").textContent = "v" + item.v + " — " + item.title;
       document.getElementById("wnd").textContent = item.desc || "";
       pane.src = target;
-      runVeil();
+      runVeil(item);
       loadCode(item);
     }
   } else {

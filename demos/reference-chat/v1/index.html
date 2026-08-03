@@ -151,12 +151,16 @@ document.getElementById("composer").addEventListener("submit", (e) => {
   handle = agent.send("", onEvent);
 });
 
-// shell autoplay: ?autoplay=1 plays the scripted turn after the countdown veil
+// shell autoplay: the shell posts "acme-play" when its countdown veil lifts
 if (new URLSearchParams(location.search).has("autoplay")) {
-  setTimeout(() => {
+  let played = false;
+  const play = () => {
+    if (played) return; played = true;
     const b = document.getElementById("btn");
     if (b && !b.disabled) b.click();
-  }, 2400);
+  };
+  window.addEventListener("message", (e) => { if (e.data === "acme-play") play(); });
+  if (top === self) setTimeout(play, 800);
 }
 </script>
 </body>
