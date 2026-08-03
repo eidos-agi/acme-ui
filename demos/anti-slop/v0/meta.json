@@ -1,0 +1,8 @@
+{
+ "title": "AI that doesn't sound like AI",
+ "desc": "Three slop paragraphs rewritten side by side, the mechanics behind the rules (banned lexicon, structural rules, specifics test, audit pass), and the plugin install for Claude and Grok.",
+ "why": "Prose that smells generated makes readers discount the claims inside it. These rules run on every sentence this site ships.",
+ "tags": [
+  "writing"
+ ]
+}

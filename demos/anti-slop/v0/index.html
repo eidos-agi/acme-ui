@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anti-slop v0 — AI that doesn't sound like AI · Eidos UI</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans);
+    line-height: 1.55; max-width: 48rem; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  header { display: flex; align-items: baseline; gap: .8rem; margin-bottom: 1.2rem; }
+  header a { color: var(--accent); text-decoration: none; font-family: var(--mono); font-size: .75rem; }
+  header .tag { font-family: var(--mono); font-weight: 700; }
+  h1 { font-size: 1.35rem; margin-bottom: .3rem; }
+  .sub { color: var(--ink-soft); margin-bottom: 1.6rem; }
+  h2 { font-size: 1rem; margin: 1.8rem 0 .6rem; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  @media (max-width: 44rem) { .pair { grid-template-columns: 1fr; } }
+  .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+    display: flex; flex-direction: column; }
+  .panel .cap { font-family: var(--mono); font-size: .7rem; text-transform: uppercase;
+    letter-spacing: .07em; padding: .5rem .8rem; border-bottom: 1px solid var(--line); }
+  .cap.badcap { color: var(--bad); }
+  .cap.goodcap { color: var(--accent); }
+  .panel .txt { padding: .8rem .9rem; font-size: .9rem; flex: 1; }
+  .panel .why { font-family: var(--mono); font-size: .68rem; color: var(--ink-soft);
+    padding: .5rem .9rem .7rem; border-top: 1px dashed var(--line); }
+  mark { background: color-mix(in srgb, var(--bad) 18%, transparent); color: inherit;
+    padding: 0 .1em; border-radius: 2px; }
+  table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+  th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--mono); font-size: .7rem; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--ink-soft); }
+  td code, li code, p code { font-family: var(--mono); font-size: .8rem; color: var(--accent); }
+  pre { font-family: var(--mono); font-size: .8rem; background: var(--surface);
+    border: 1px solid var(--line); border-radius: var(--radius); padding: .8rem 1rem;
+    overflow-x: auto; line-height: 1.6; }
+  ul { padding-left: 1.2rem; color: var(--ink-soft); font-size: .9rem; }
+  li { margin: .3rem 0; }
+  .note { color: var(--ink-soft); font-size: .9rem; margin-top: 1rem; }
+  .note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <a href="https://ui.eidosagi.com/">eidos ui</a>
+  <span class="tag">anti-slop v0</span>
+</header>
+
+<h1>AI that doesn't sound like AI.</h1>
+<p class="sub">LLMs share a house style, and readers have learned to smell it:
+the same fifty words, everything in threes, punchy fragments, a bright little
+summary at the end. Anti-slop is a set of hard rules that block those patterns
+at generation time. Same model, different instructions, prose a human would
+sign.</p>
+
+<h2>Before and after</h2>
+
+<div class="pair">
+  <div class="panel">
+    <div class="cap badcap">slop</div>
+    <div class="txt">We're excited to announce a <mark>game-changing</mark> update
+    that <mark>empowers</mark> teams to <mark>seamlessly</mark>
+    <mark>leverage</mark> real-time insights. It's not just a dashboard —
+    it's a whole new way of working.</div>
+    <div class="why">banned lexicon ×4 · false contrast ("not just X") · zero facts</div>
+  </div>
+  <div class="panel">
+    <div class="cap goodcap">rewrite</div>
+    <div class="txt">The dashboard now updates every 30 seconds instead of
+    nightly. Ops caught Tuesday's billing spike at 9:14, eleven minutes after
+    it started, and rolled back before invoices went out.</div>
+    <div class="why">numbers, names, one concrete incident. Nothing to smell.</div>
+  </div>
+</div>
+
+<div class="pair">
+  <div class="panel">
+    <div class="cap badcap">slop</div>
+    <div class="txt">This approach is <mark>faster, simpler, and more
+    reliable</mark>. No config. No boilerplate. No surprises. <mark>In
+    today's fast-paced</mark> development <mark>landscape</mark>, that
+    matters more than ever.</div>
+    <div class="why">artificial rule of three ×2 · parataxis stack · stock closer</div>
+  </div>
+  <div class="panel">
+    <div class="cap goodcap">rewrite</div>
+    <div class="txt">It needs no config file. Setup went from forty lines of
+    YAML to zero, which is also why the test suite got nine seconds faster:
+    nothing to parse before each run.</div>
+    <div class="why">two claims, one mechanism connecting them, varied sentence length</div>
+  </div>
+</div>
+
+<div class="pair">
+  <div class="panel">
+    <div class="cap badcap">slop</div>
+    <div class="txt"><mark>It's worth noting</mark> that results may vary —
+    every team is different — but <mark>at the end of the day</mark>, this
+    could be a <mark>robust</mark> solution for many organizations — a true
+    win-win.</div>
+    <div class="why">hedging seesaw · em-dash pile · empty praise, no side taken</div>
+  </div>
+  <div class="panel">
+    <div class="cap goodcap">rewrite</div>
+    <div class="txt">Teams under about twenty engineers should switch; the
+    migration took us one afternoon. Larger monorepos shouldn't yet, because
+    the watcher still chokes past 50k files.</div>
+    <div class="why">picks a side, names the boundary, admits the flaw</div>
+  </div>
+</div>
+
+<h2>How it works</h2>
+<table>
+  <tr><th>Layer</th><th>What it does</th></tr>
+  <tr><td><strong>Banned lexicon</strong></td><td>A merged blocklist (community
+  lists + house additions) of words and phrases that fingerprint AI prose:
+  <code>delve</code>, <code>leverage</code>, <code>seamless</code>,
+  <code>robust</code>, <code>game-changer</code>, <code>it's worth
+  noting</code>, <code>in today's fast-paced…</code> The list regenerates from
+  upstream sources with provenance tags.</td></tr>
+  <tr><td><strong>Structural rules</strong></td><td>No rule of three by
+  default. No "it's not X, it's Y" unless the contrast is load-bearing. Vary
+  sentence length. One em dash per ~500 words. Active voice. End on a concrete
+  detail, never a bright summary.</td></tr>
+  <tr><td><strong>Specifics test</strong></td><td>Numbers, names, mechanisms
+  instead of adjectives. The tell for slop is prose any AI could write for any
+  person — the fix is a detail only this author could know.</td></tr>
+  <tr><td><strong>Silent self-check</strong></td><td>Before output: banned
+  words? three same-length sentences in a row? artificial threes? em-dash
+  pile? generic opener? motivational closer? Applied without announcing it.</td></tr>
+  <tr><td><strong>Audit pass</strong></td><td>A separate reviewer
+  (<code>anti-slop-audit</code>) runs post-draft and returns a punch list:
+  file, line, category, offending phrase, suggested rewrite.</td></tr>
+</table>
+
+<h2>Install it</h2>
+<p class="note">Anti-slop ships as a plugin from the Eidos marketplace
+(source: <a href="https://github.com/eidos-agi/anti-slop">eidos-agi/anti-slop</a>),
+with three skills: <code>anti-slop</code> (constrains generation),
+<code>anti-slop-audit</code> (reviews drafts), and
+<code>world-class-case-study</code> (long-form structure).</p>
+<pre># Claude Code
+claude plugins install anti-slop@eidos-marketplace
+
+# Grok
+grok plugin marketplace add eidos-agi/eidos-marketplace
+grok plugin install anti-slop --trust && grok plugin enable anti-slop</pre>
+
+<h2>Rules that carry this site</h2>
+<ul>
+  <li>Every headline and rung description on eidos-ui passed through these
+  rules. The one that slipped ("grown in public") got caught by the founder
+  in minutes, which is the point: readers notice.</li>
+  <li>Slop is not a writing-quality issue; it is a trust issue. Prose that
+  smells generated makes readers discount the claims inside it.</li>
+  <li>The rewrite is always more specific than the original. If you cannot
+  add a number, a name, or a mechanism, you do not know enough to write the
+  sentence yet.</li>
+</ul>
+</body>
+</html>

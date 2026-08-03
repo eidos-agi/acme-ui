@@ -15,6 +15,7 @@ const FAMILIES = [
   { key: "reference-chat", name: "Agent chat", filterable: true },
   { key: "product-shell-mock", name: "Product shell mocks", filterable: false },
   { key: "icons", name: "Icons", filterable: false },
+  { key: "anti-slop", name: "Anti-slop", filterable: false },
 ];
 
 function scanVersions() {
