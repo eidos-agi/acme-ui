@@ -70,27 +70,35 @@
 <body>
 <header>
   <div class="wordmark">Acme UI</div>
-  <h1>A chat frontend for AI agents, rebuilt version by version.</h1>
-  <p class="sub">Each version fixes one named problem. All versions stay online
-  so you can click through and compare them.</p>
+  <h1>UI demos for agent products, grown in public.</h1>
+  <p class="sub">Two families: <strong>agent chat</strong> (stream, tools, stop)
+  and <strong>product shell mocks</strong> (desktop + phone chrome, IA choosers).
+  Each version fixes one named problem and stays online.</p>
 </header>
 
+<section class="about" style="margin-top:1.25rem;border-top:none;padding-top:0">
+  <p style="margin-bottom:.75rem"><strong>Product shell mocks</strong> —
+  multi-surface IA before native code.
+  <a href="demos/product-shell-mock/">Open family</a> ·
+  <a href="demos/product-shell-mock/v0/">v0 context pills (live)</a> ·
+  <a href="demos/product-shell-mock/TECHNIQUE.md">technique</a></p>
+</section>
+
+<p class="sub" style="margin:1.5rem 0 .5rem;font-family:var(--mono);font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft)">Reference chat ladder</p>
 <nav class="pills" id="pills"></nav>
 
 <ol class="ladder" id="ladder"></ol>
-<p class="tail">More versions get added as they ship. v200 or beyond if it
+<p class="tail">More chat versions get added as they ship. v200 or beyond if it
 takes that many.</p>
 
 <section class="about">
-  <p>Versions are checked against the acceptance list in
+  <p>Chat versions are checked against the acceptance list in
   <a href="https://github.com/eidos-agi/ui-patterns/blob/main/briefs/01-reference-chat-demo.md">brief 01</a>
   of <a href="https://github.com/eidos-agi/ui-patterns">eidos-agi/ui-patterns</a>.
-  Every version talks to the same
-  <a href="https://github.com/eidos-agi/acme-ui/blob/master/demos/mock-ai/v1.js">mock agent</a>,
-  a scripted server that speaks chat-events v1.1, including abort and
-  late-event edge cases. The agent code never changes between versions; only
-  the frontend does. Acme is a placeholder brand. Colors and sizes are CSS
-  tokens you can swap.
+  Every chat demo talks to the same
+  <a href="https://github.com/eidos-agi/acme-ui/blob/master/demos/mock-ai/v1.js">mock agent</a>
+  (chat-events v1.1). Shell mocks use only in-page JS — no mock-ai.
+  Acme is a placeholder brand; CSS tokens re-skin everything.
   Source: <a href="https://github.com/eidos-agi/acme-ui">eidos-agi/acme-ui</a>.</p>
 </section>
 
