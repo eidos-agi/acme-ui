@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference chat v0 — the naive baseline · Acme UI</title>
+<style>
+  :root {
+    --bg: #faf9f7; --surface: #ffffff; --ink: #1a1a1a; --ink-soft: #6b6a66;
+    --line: #e4e2dd; --accent: #0d5c4d; --accent-ink: #ffffff;
+    --user-bg: #eceae4; --tool-bg: #f4f2ec;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#141413; --surface:#1d1c1b; --ink:#ececea; --ink-soft:#98968f;
+      --line:#2e2d2a; --accent:#4fb39a; --accent-ink:#10201b;
+      --user-bg:#262523; --tool-bg:#21201e; }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans);
+    height: 100dvh; display: flex; flex-direction: column; }
+  header { padding: .8rem 1.25rem; border-bottom: 1px solid var(--line);
+    display: flex; align-items: baseline; gap: .8rem; }
+  header a { color: var(--accent); text-decoration: none; font-family: var(--mono); font-size: .75rem; }
+  header .tag { font-family: var(--mono); font-weight: 700; }
+  header .note { color: var(--ink-soft); font-size: .8rem; }
+  #log { flex: 1; overflow-y: auto; padding: 1.25rem; display: flex;
+    flex-direction: column; gap: .8rem; max-width: 46rem; width: 100%; margin: 0 auto; }
+  .msg { padding: .6rem .9rem; border-radius: 6px; white-space: pre-wrap;
+    line-height: 1.5; font-size: .95rem; }
+  .user { background: var(--user-bg); align-self: flex-end; max-width: 85%; }
+  .assistant { background: var(--surface); border: 1px solid var(--line); align-self: stretch; }
+  .tool { background: var(--tool-bg); border: 1px dashed var(--line);
+    font-family: var(--mono); font-size: .8rem; color: var(--ink-soft); }
+  form { border-top: 1px solid var(--line); padding: .9rem 1.25rem; }
+  .row { display: flex; gap: .6rem; max-width: 46rem; margin: 0 auto; }
+  input { flex: 1; font: inherit; padding: .55rem .8rem; border-radius: 6px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+  button { font: inherit; padding: .55rem 1.1rem; border-radius: 6px; border: none;
+    background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+  button:disabled { opacity: .45; cursor: default; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../">&larr; versions</a>
+  <span class="tag">v0</span>
+  <span class="note">the naive baseline — no Stop, raw tool dumps, scroll yanks. That's the lesson.</span>
+</header>
+
+<div id="log"></div>
+
+<form id="composer">
+  <div class="row">
+    <input id="box" value="Audit the repo's broken links and fix them" autocomplete="off">
+    <button id="send">Send</button>
+  </div>
+</form>
+
+<script>
+// Turn 1 of the brief-01 script (chat-events v1.1 shapes), happy path only.
+const SCRIPT = [
+  [300,  {type:"turn_start"}],
+  [700,  {type:"text", text:"I'll scan the docs for broken links first.\n"}],
+  [150,  {type:"tool_use", name:"bash", label:"Scan 139 markdown files for links"}],
+  [1800, {type:"tool_result", status:"ok", duration_ms:1750,
+    content:"412 links found, 9 broken:\ndocs/emf/index.md → ../missing.md\npatterns/catalog.md → cross-cutting/design-not-here.md\ndocs/emf/claims/streaming.md → ../../schemas/old.json\nharvests/popular/INDEX.md → micro/chat/gone.md\npatterns/agentic-chat/README.md → micro/removed.md\nreference/VISUAL.md → ../uizze-notes.md\npatterns/CANONICAL.md → catalog-v2.md\nREADME.md → docs/emf/intents/dead.md\nAGENTS.md → TELOS-old.md"}],
+  [400,  {type:"text", text:"Found 9 broken links. Fixing them now — 7 are the same renamed folder.\n"}],
+  [200,  {type:"tool_use", name:"edit", label:"Rewrite 9 links across 4 files"}],
+  [4200, {type:"tool_result", status:"ok", duration_ms:4100,
+    content:"4 files changed, 9 links now resolve"}],
+  [500,  {type:"text", text:"Done — all 9 broken links fixed. 4 files touched; every link in the repo now resolves."}],
+  [300,  {type:"done"}],
+];
+
+const log = document.getElementById("log");
+const box = document.getElementById("box");
+const send = document.getElementById("send");
+let current = null; // current assistant bubble
+
+function add(cls, text) {
+  const d = document.createElement("div");
+  d.className = "msg " + cls;
+  d.textContent = text;
+  log.appendChild(d);
+  log.scrollTop = log.scrollHeight; // v0 sin: always yank to bottom
+  return d;
+}
+
+function stream(el, text, done) {
+  // v0: crude char-by-char append, fixed cadence
+  let i = 0;
+  const t = setInterval(() => {
+    el.textContent += text[i++];
+    log.scrollTop = log.scrollHeight; // yank on every char
+    if (i >= text.length) { clearInterval(t); done(); }
+  }, 12);
+}
+
+function play(i) {
+  if (i >= SCRIPT.length) return;
+  const [delay, ev] = SCRIPT[i];
+  setTimeout(() => {
+    if (ev.type === "turn_start") {
+      current = add("assistant", "");
+      play(i + 1);
+    } else if (ev.type === "text") {
+      stream(current, ev.text, () => play(i + 1));
+    } else if (ev.type === "tool_use") {
+      add("tool", "▸ " + ev.name + ": " + ev.label + " …");
+      current = null;
+      play(i + 1);
+    } else if (ev.type === "tool_result") {
+      // v0 sin: dump the full result inline, no collapse
+      add("tool", ev.content + "\n(" + ev.duration_ms + "ms)");
+      current = add("assistant", "");
+      play(i + 1);
+    } else if (ev.type === "done") {
+      if (current && !current.textContent) current.remove();
+      send.disabled = false;
+      box.disabled = false;
+    }
+  }, delay);
+}
+
+document.getElementById("composer").addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (send.disabled) return;
+  add("user", box.value);
+  box.value = "";
+  send.disabled = true;   // v0 sin: no Stop — you just wait
+  box.disabled = true;
+  play(0);
+});
+</script>
+</body>
+</html>
