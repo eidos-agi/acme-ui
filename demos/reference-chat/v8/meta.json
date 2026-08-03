@@ -1,0 +1,10 @@
+{
+ "title": "Safe markdown stream",
+ "desc": "Assistant text renders as markdown while it streams: headings, bold, lists, inline code, links, and fenced code. Input is escaped before rendering and unterminated markers are auto-closed, so nothing flickers as literal asterisks.",
+ "why": "Agents speak markdown. Dumping it raw wastes the structure; rendering it naively invites XSS and mid-stream flicker.",
+ "tags": [
+  "markdown",
+  "streaming"
+ ],
+ "auto": true
+}

@@ -1,0 +1,10 @@
+{
+ "title": "Optimistic send",
+ "desc": "The user message appears instantly in a pending state. A failed send marks the same bubble inline with a retry that resends the exact text. Includes an offline toggle to try it.",
+ "why": "Losing a typed message is the cardinal sin of chat. Optimistic render plus an honest failure state means the draft always survives.",
+ "tags": [
+  "composer",
+  "errors"
+ ],
+ "auto": true
+}

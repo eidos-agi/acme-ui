@@ -1,0 +1,9 @@
+{
+ "title": "Composer ergonomics",
+ "desc": "The input is a growing textarea capped at 9rem. Enter sends, Shift-Enter adds a line, and the height resets after send.",
+ "why": "A single-line input punishes anyone writing more than a sentence; a composer that grows keeps the whole draft visible.",
+ "tags": [
+  "composer"
+ ],
+ "auto": true
+}

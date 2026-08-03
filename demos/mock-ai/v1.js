@@ -31,6 +31,7 @@ window.MockAI = (function () {
     "Audit the repo's broken links and fix them",
     "Now rewrite every README",
     "Just fix the catalog opening",
+    "Draft the release notes",
   ];
   const norm = (t) => (t || "").toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
 
@@ -58,6 +59,7 @@ window.MockAI = (function () {
         2, 60),
       [400, { type: "done", result: { turns: 1, latency_ms: 14000 } }],
     ],
+    // (script 4 is appended below: markdown-rich release notes)
     // 3 — recoverable error that keeps partial output
     () => [
       [350, { type: "turn_start" }],
@@ -66,6 +68,12 @@ window.MockAI = (function () {
       [1600, {}], // beat while "retrying"
       ...deltas('Lock cleared. Opening now reads: "This repo exists to make agent-chat frontends excellent…"', 2, 45),
       [400, { type: "done", result: { turns: 1, latency_ms: 4100 } }],
+    ],
+    // 4 — markdown-rich stream: headings, bold, list, code, link, fence
+    () => [
+      [350, { type: "turn_start" }],
+      ...deltas("# Release 0.8\n\nThis release focuses on **calm legibility** for agent chat.\n\n## Changes\n\n- `stop` now interrupts within one event\n- tool rows show *live elapsed time*\n- errors render as small notes — see [the ladder](https://ui.eidosagi.com/)\n\n```js\nagent.send(prompt, onEvent)\n```\n\nReady to publish.", 2, 50),
+      [400, { type: "done", result: { turns: 1, latency_ms: 6000 } }],
     ],
   ];
 

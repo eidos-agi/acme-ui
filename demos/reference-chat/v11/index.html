@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reference chat v7 — elapsed on slow tools · Eidos UI</title>
+<title>Reference chat v11 — optimistic send · Eidos UI</title>
 <link rel="stylesheet" href="/brand.css?v=6">
 <link rel="stylesheet" href="/demos/reference-chat/_base.css?v=6">
 <style>
@@ -57,14 +57,47 @@
   .thinking i:nth-child(3) { animation-delay: .3s; }
   @keyframes think { 0%,100% { opacity: .25; transform: translateY(0); }
     50% { opacity: 1; transform: translateY(-2px); } }
+  /* v8 lesson: streamed markdown, rendered not dumped */
+  .assistant.md { white-space: normal; }
+  .assistant.md h3 { font-size: 1.05rem; margin: .2rem 0 .4rem; }
+  .assistant.md h4 { font-size: .95rem; margin: .5rem 0 .3rem; }
+  .assistant.md p { margin: .3rem 0; }
+  .assistant.md ul { margin: .3rem 0; padding-left: 1.2rem; }
+  .assistant.md li { margin: .15rem 0; }
+  .assistant.md code { font-family: var(--mono); font-size: .82em;
+    background: var(--tool-bg); padding: .08em .35em; border-radius: 3px; }
+  .assistant.md pre { background: var(--tool-bg); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: .6rem .8rem; margin: .4rem 0; overflow-x: auto; }
+  .assistant.md pre code { background: none; padding: 0; font-size: .78rem; }
+  .assistant.md a { color: var(--accent); }
+  /* v9 lesson: the caret and the cadence */
+  .assistant.streaming::after { content: "▍"; color: var(--accent);
+    animation: caret 1s steps(1) infinite; margin-left: .05em; }
+  @keyframes caret { 50% { opacity: 0; } }
+  /* v10 lesson: a composer that grows */
+  textarea#box { flex: 1; font: inherit; padding: .55rem .8rem;
+    border-radius: var(--radius); border: 1px solid var(--line);
+    background: var(--surface); color: var(--ink); resize: none;
+    line-height: 1.4; max-height: 9rem; overflow-y: auto; }
+  /* v11 lesson: optimistic send with an honest failure state */
+  .msg.user.pending { opacity: .7; }
+  .msg .chip { display: block; font-family: var(--mono); font-size: .65rem;
+    margin-top: .3rem; opacity: .85; }
+  .msg .chip button { font: inherit; font-family: var(--mono); border: none;
+    background: none; color: inherit; text-decoration: underline; cursor: pointer;
+    padding: 0; }
+  .msg.user.failed { opacity: 1; outline: 1px dashed var(--stop); }
+  .offlinebox { margin-left: auto; display: flex; align-items: center; gap: .35rem;
+    font-family: var(--mono); font-size: .7rem; color: var(--ink-soft); white-space: nowrap; }
 </style>
 </head>
 <body>
 <header>
   <a href="https://ui.eidosagi.com/">eidos ui</a>
   <a href="../">&larr; versions</a>
-  <span class="tag">v7</span>
-  <span class="note">elapsed on slow tools — a running tool shows its clock, so a long tool never reads as a hang.</span>
+  <span class="tag">v11</span>
+  <span class="note">optimistic send — your message lands instantly; if the send fails it is marked inline with retry. Toggle offline to try it.</span>
+  <label class="offlinebox"><input type="checkbox" id="offline"> offline</label>
 </header>
 
 <div id="log"></div>
@@ -73,16 +106,17 @@
 
 <form id="composer">
   <div class="row">
-    <input id="box" value="Audit the repo's broken links and fix them" autocomplete="off">
+    <textarea id="box" rows="1" autocomplete="off">Audit the repo's broken links and fix them</textarea>
     <button id="btn" type="submit" class="primary">Send</button>
   </div>
 </form>
 
 <script src="/demos/mock-ai/v1.js?v=6"></script>
 <script>
-// v7 fixes SILENT SLOW TOOLS on top of v6: a running tool row shows live
-// elapsed time next to its spinner (updated every 100ms), cleared when the
-// result lands or the turn ends.
+// v11 fixes SEND TRUST on top of v10: the user message appears instantly in
+// a pending state. If the transport fails (simulated by the offline toggle),
+// the same bubble is marked failed with an inline retry that resends the
+// exact text. No draft is ever lost, no bubble ever vanishes.
 const log = document.getElementById("log");
 const box = document.getElementById("box");
 const btn = document.getElementById("btn");
@@ -94,6 +128,28 @@ const dead = new Set();
 const tools = new Map(); // tool_use_id -> {row, state, pre, iv}
 const jump = document.getElementById("jump");
 let thinkingEl = null;
+let buf = "";            // undrained stream text
+let pumping = false;
+
+function drainAll() {    // used on terminal events: no text left behind
+  if (buf && current) {
+    current.dataset.raw = (current.dataset.raw || "") + buf;
+    current.innerHTML = mdRender(current.dataset.raw);
+    buf = "";
+    follow();
+  }
+  if (current) current.classList.remove("streaming");
+}
+function pump() {
+  if (!buf || !current) { pumping = false; if (current) current.classList.remove("streaming"); return; }
+  const take = buf.slice(0, 3);
+  buf = buf.slice(3);
+  current.dataset.raw = (current.dataset.raw || "") + take;
+  current.innerHTML = mdRender(current.dataset.raw);
+  current.classList.add("streaming");
+  follow();
+  requestAnimationFrame(pump);
+}
 
 function showThinking() {
   clearThinking();
@@ -126,6 +182,47 @@ function add(cls, text) {
   log.appendChild(d);
   follow();
   return d;
+}
+
+function escMd(t) {
+  return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function inlineMd(t) {
+  t = escMd(t);
+  if ((t.split("**").length - 1) % 2) t += "**";   // auto-close: no flicker
+  const singles = t.split("*").length - 1 - 2 * (t.split("**").length - 1);
+  if (singles % 2) t += "*";
+  if ((t.split("`").length - 1) % 2) t += "`";
+  t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  t = t.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+  t = t.replace(/`([^`]+)`/g, "<code>$1</code>");
+  t = t.replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  return t;
+}
+function mdRender(raw) {
+  let html = "";
+  const parts = raw.split("```");                   // odd indexes are fences
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 2 === 1) {
+      const body = parts[i].replace(/^[a-z]*\n?/, "");
+      html += "<pre><code>" + escMd(body) + "</code></pre>";
+      continue;
+    }
+    const lines = parts[i].split("\n");
+    let inList = false, para = [];
+    const flush = () => { if (para.length) { html += "<p>" + inlineMd(para.join(" ")) + "</p>"; para = []; } };
+    const endList = () => { if (inList) { html += "</ul>"; inList = false; } };
+    for (const ln of lines) {
+      if (/^## /.test(ln)) { flush(); endList(); html += "<h4>" + inlineMd(ln.slice(3)) + "</h4>"; }
+      else if (/^# /.test(ln)) { flush(); endList(); html += "<h3>" + inlineMd(ln.slice(2)) + "</h3>"; }
+      else if (/^- /.test(ln)) { flush(); if (!inList) { html += "<ul>"; inList = true; } html += "<li>" + inlineMd(ln.slice(2)) + "</li>"; }
+      else if (ln.trim() === "") { flush(); endList(); }
+      else { para.push(ln); }
+    }
+    flush(); endList();
+  }
+  return html;
 }
 
 function addErrNote(text) {
@@ -211,20 +308,25 @@ function onEvent(ev) {
     current = add("assistant", "");
   } else if (ev.type === "text") {
     if (!current) current = add("assistant", "");
-    current.textContent += ev.text;
-    follow();
+    current.classList.add("md");
+    buf += ev.text;
+    if (!pumping) { pumping = true; requestAnimationFrame(pump); }
   } else if (ev.type === "tool_use") {
+    drainAll();
     addToolRow(ev);
     current = null;
   } else if (ev.type === "tool_result") {
     resolveToolRow(ev);
+    drainAll();
     current = null;
   } else if (ev.type === "abort") {
+    drainAll();
     if (current && !current.textContent) current.remove();
     add("stopped", "⏹ stopped — partial response kept");
     current = null;
     endTurn(ev.turn_id);
   } else if (ev.type === "done") {
+    drainAll();
     if (current && !current.textContent) current.remove();
     current = null;
     endTurn(ev.turn_id);
@@ -233,6 +335,7 @@ function onEvent(ev) {
     current = null;
     endTurn(ev.turn_id);
   } else if (ev.type === "error" && ev.recoverable) {
+    drainAll();
     addErrNote(ev.text);
     current = null; // recovered text starts a fresh bubble, in order
   } else {
@@ -240,24 +343,76 @@ function onEvent(ev) {
   }
 }
 
-document.getElementById("composer").addEventListener("submit", (e) => {
-  e.preventDefault();
-  if (handle) { handle.stop(); return; }
-  if (!box.value.trim()) return;
-  const typed = box.value;
-  add("user", typed);
-  box.value = "";
+function autogrow() {
+  box.style.height = "auto";
+  box.style.height = Math.min(box.scrollHeight, 144) + "px";
+}
+box.addEventListener("input", autogrow);
+box.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    document.getElementById("composer").requestSubmit();
+  }
+});
+autogrow();
+
+function attemptSend(typed, bubble) {
+  const chip = bubble.querySelector(".chip");
+  if (document.getElementById("offline").checked) {
+    setTimeout(() => {              // transport fails: honest inline state
+      bubble.classList.remove("pending");
+      bubble.classList.add("failed");
+      chip.innerHTML = "";
+      const b = document.createElement("button");
+      b.textContent = "failed — retry";
+      b.onclick = () => attemptSend(typed, bubble);
+      chip.appendChild(b);
+      clearThinking();
+      setBusy(false);
+    }, 500);
+    return;
+  }
+  if (handle) return;               // a turn is streaming; retry stays available
+  bubble.classList.remove("pending", "failed");
+  if (chip) chip.remove();
   setBusy(true);
   showThinking();
   handle = agent.send(typed, onEvent);
+}
+
+document.getElementById("composer").addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (handle) {                     // button is in Stop mode
+    handle.stop();
+    return;
+  }
+  if (!box.value.trim()) return;
+  const typed = box.value;
+  const bubble = add("user", typed);   // optimistic: lands before any transport
+  bubble.classList.add("pending");
+  const chip = document.createElement("span");
+  chip.className = "chip";
+  chip.textContent = "sending…";
+  bubble.appendChild(chip);
+  box.value = "";
+  autogrow();
+  attemptSend(typed, bubble);
 });
 
 
 // vignette: turn 2 streams, the view scrolls up mid-stream (no yank),
 // the jump pill appears, then jumps back to latest
 window.VIGNETTE = () => {
-  // turn 1 has the 4.2s edit tool — watch its clock run
+  agent.preroll(onEvent, 1);
+  // fail once offline, then retry online — the whole lesson in one arc
+  document.getElementById("offline").checked = true;
+  box.value = "Now rewrite every README";
   document.getElementById("composer").requestSubmit();
+  setTimeout(() => {
+    document.getElementById("offline").checked = false;
+    const retry = log.querySelector(".msg.user.failed .chip button");
+    if (retry) retry.click();
+  }, 2200);
 };
 </script>
 <script src="/demos/reference-chat/_autoplay.js?v=6"></script>

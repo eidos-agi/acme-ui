@@ -1,40 +1,15 @@
 [
  {
-  "v": 8,
-  "title": "Safe markdown stream",
-  "desc": "Markdown renders progressively during the stream, sanitized, without flicker from half-open elements.",
-  "tags": [
-   "markdown",
-   "streaming"
-  ]
- },
- {
-  "v": 9,
-  "title": "Stream grain",
-  "desc": "A cursor caret and tuned token batching make the stream read smoothly instead of stuttering.",
-  "tags": [
-   "streaming"
-  ]
- },
- {
-  "v": 10,
-  "title": "Composer ergonomics",
-  "desc": "The input box grows with its content. Enter sends, Shift-Enter adds a line.",
-  "tags": [
-   "composer"
-  ]
- },
- {
-  "v": 11,
-  "title": "Optimistic send",
-  "desc": "The user message appears immediately on send. If sending fails, the message is marked inline with a retry option.",
-  "tags": [
-   "composer",
-   "errors"
-  ]
- },
- {
   "v": 12,
+  "title": "Rich accordion expansion",
+  "desc": "Long assistant sections \u2014 reasoning, step groups, big answers \u2014 collapse into accordions that expand smoothly with full markdown inside, the v3 tool-row mechanic generalized to any rich content.",
+  "tags": [
+   "disclosure",
+   "markdown"
+  ]
+ },
+ {
+  "v": 13,
   "title": "Approval card",
   "desc": "A risky tool call shows an approve/deny card in the transcript, and the agent waits for the decision. Needs mock v2.",
   "tags": [
@@ -42,7 +17,7 @@
   ]
  },
  {
-  "v": 13,
+  "v": 14,
   "title": "Danger grading",
   "desc": "Approval cards vary by risk level. Safe tools run without asking; risky ones wait.",
   "tags": [
@@ -50,7 +25,7 @@
   ]
  },
  {
-  "v": 14,
+  "v": 15,
   "title": "Reconnect + replay",
   "desc": "After a connection drop, the client resumes from its last sequence number and the missed events replay. Needs mock v2.",
   "tags": [
@@ -58,7 +33,7 @@
   ]
  },
  {
-  "v": 15,
+  "v": 16,
   "title": "Thread isolation",
   "desc": "Each thread keeps its own draft and its own stream. Switching threads mid-stream does not mix content.",
   "tags": [
@@ -66,7 +41,7 @@
   ]
  },
  {
-  "v": 16,
+  "v": 17,
   "title": "Screen-reader-safe streaming",
   "desc": "A live region announces streamed text at a readable rate for screen readers instead of token by token.",
   "tags": [
@@ -75,7 +50,7 @@
   ]
  },
  {
-  "v": 17,
+  "v": 18,
   "title": "Focus discipline",
   "desc": "Focus returns to the input box after actions, and the transcript is fully keyboard-navigable.",
   "tags": [
@@ -83,7 +58,7 @@
   ]
  },
  {
-  "v": 18,
+  "v": 19,
   "title": "Hover without shift",
   "desc": "Message actions appear on hover without shifting the layout.",
   "tags": [
@@ -91,7 +66,7 @@
   ]
  },
  {
-  "v": 19,
+  "v": 20,
   "title": "Parallel tools",
   "desc": "Several tools running at once render as separate rows, each with its own state.",
   "tags": [
@@ -99,7 +74,7 @@
   ]
  },
  {
-  "v": 20,
+  "v": 21,
   "title": "Oversized results",
   "desc": "Large tool output shows a short summary inline. The full content loads on demand via content_full_ref.",
   "tags": [
@@ -107,7 +82,7 @@
   ]
  },
  {
-  "v": 21,
+  "v": 22,
   "title": "Task tree",
   "desc": "Sub-agents and nested work render as a collapsible tree.",
   "tags": [
@@ -115,7 +90,7 @@
   ]
  },
  {
-  "v": 22,
+  "v": 23,
   "title": "Artifact pane",
   "desc": "Generated documents open in a side pane next to the chat.",
   "tags": [
@@ -123,7 +98,7 @@
   ]
  },
  {
-  "v": 23,
+  "v": 24,
   "title": "Selection-scoped edit",
   "desc": "Select part of an artifact and request a change scoped to that selection.",
   "tags": [
@@ -131,7 +106,7 @@
   ]
  },
  {
-  "v": 24,
+  "v": 25,
   "title": "Mobile ergonomics",
   "desc": "Keyboard avoidance, safe areas, and touch target sizes for phones.",
   "tags": [
@@ -139,7 +114,7 @@
   ]
  },
  {
-  "v": 25,
+  "v": 26,
   "title": "Long-transcript performance",
   "desc": "The transcript stays smooth with thousands of messages, via virtualization.",
   "tags": [

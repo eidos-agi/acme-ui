@@ -1,0 +1,9 @@
+{
+ "title": "Stream grain",
+ "desc": "Network chunks land in a buffer and a per-frame pump paints a few characters at a time, so text arrives at a steady cadence. A blinking caret rides the tail of the stream.",
+ "why": "Chunk-jumping text reads as machinery; a steady cadence with a caret reads as writing. Same bytes, different feel.",
+ "tags": [
+  "streaming"
+ ],
+ "auto": true
+}

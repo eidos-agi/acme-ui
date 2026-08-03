@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reference chat v7 — elapsed on slow tools · Eidos UI</title>
+<title>Reference chat v8 — safe markdown stream · Eidos UI</title>
 <link rel="stylesheet" href="/brand.css?v=6">
 <link rel="stylesheet" href="/demos/reference-chat/_base.css?v=6">
 <style>
@@ -57,14 +57,27 @@
   .thinking i:nth-child(3) { animation-delay: .3s; }
   @keyframes think { 0%,100% { opacity: .25; transform: translateY(0); }
     50% { opacity: 1; transform: translateY(-2px); } }
+  /* v8 lesson: streamed markdown, rendered not dumped */
+  .assistant.md { white-space: normal; }
+  .assistant.md h3 { font-size: 1.05rem; margin: .2rem 0 .4rem; }
+  .assistant.md h4 { font-size: .95rem; margin: .5rem 0 .3rem; }
+  .assistant.md p { margin: .3rem 0; }
+  .assistant.md ul { margin: .3rem 0; padding-left: 1.2rem; }
+  .assistant.md li { margin: .15rem 0; }
+  .assistant.md code { font-family: var(--mono); font-size: .82em;
+    background: var(--tool-bg); padding: .08em .35em; border-radius: 3px; }
+  .assistant.md pre { background: var(--tool-bg); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: .6rem .8rem; margin: .4rem 0; overflow-x: auto; }
+  .assistant.md pre code { background: none; padding: 0; font-size: .78rem; }
+  .assistant.md a { color: var(--accent); }
 </style>
 </head>
 <body>
 <header>
   <a href="https://ui.eidosagi.com/">eidos ui</a>
   <a href="../">&larr; versions</a>
-  <span class="tag">v7</span>
-  <span class="note">elapsed on slow tools — a running tool shows its clock, so a long tool never reads as a hang.</span>
+  <span class="tag">v8</span>
+  <span class="note">safe markdown — the stream renders headings, bold, lists, code and links progressively, sanitized, with no half-open flicker.</span>
 </header>
 
 <div id="log"></div>
@@ -80,9 +93,10 @@
 
 <script src="/demos/mock-ai/v1.js?v=6"></script>
 <script>
-// v7 fixes SILENT SLOW TOOLS on top of v6: a running tool row shows live
-// elapsed time next to its spinner (updated every 100ms), cleared when the
-// result lands or the turn ends.
+// v8 fixes MARKDOWN on top of v7: assistant text renders as markdown while
+// it streams. Everything is escaped before our own tags are added (no raw
+// HTML pass-through), links are https-only, and unterminated **/`/``` are
+// optimistically closed so half-open constructs never flicker as literals.
 const log = document.getElementById("log");
 const box = document.getElementById("box");
 const btn = document.getElementById("btn");
@@ -126,6 +140,47 @@ function add(cls, text) {
   log.appendChild(d);
   follow();
   return d;
+}
+
+function escMd(t) {
+  return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function inlineMd(t) {
+  t = escMd(t);
+  if ((t.split("**").length - 1) % 2) t += "**";   // auto-close: no flicker
+  const singles = t.split("*").length - 1 - 2 * (t.split("**").length - 1);
+  if (singles % 2) t += "*";
+  if ((t.split("`").length - 1) % 2) t += "`";
+  t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  t = t.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+  t = t.replace(/`([^`]+)`/g, "<code>$1</code>");
+  t = t.replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  return t;
+}
+function mdRender(raw) {
+  let html = "";
+  const parts = raw.split("```");                   // odd indexes are fences
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 2 === 1) {
+      const body = parts[i].replace(/^[a-z]*\n?/, "");
+      html += "<pre><code>" + escMd(body) + "</code></pre>";
+      continue;
+    }
+    const lines = parts[i].split("\n");
+    let inList = false, para = [];
+    const flush = () => { if (para.length) { html += "<p>" + inlineMd(para.join(" ")) + "</p>"; para = []; } };
+    const endList = () => { if (inList) { html += "</ul>"; inList = false; } };
+    for (const ln of lines) {
+      if (/^## /.test(ln)) { flush(); endList(); html += "<h4>" + inlineMd(ln.slice(3)) + "</h4>"; }
+      else if (/^# /.test(ln)) { flush(); endList(); html += "<h3>" + inlineMd(ln.slice(2)) + "</h3>"; }
+      else if (/^- /.test(ln)) { flush(); if (!inList) { html += "<ul>"; inList = true; } html += "<li>" + inlineMd(ln.slice(2)) + "</li>"; }
+      else if (ln.trim() === "") { flush(); endList(); }
+      else { para.push(ln); }
+    }
+    flush(); endList();
+  }
+  return html;
 }
 
 function addErrNote(text) {
@@ -211,7 +266,9 @@ function onEvent(ev) {
     current = add("assistant", "");
   } else if (ev.type === "text") {
     if (!current) current = add("assistant", "");
-    current.textContent += ev.text;
+    current.classList.add("md");
+    current.dataset.raw = (current.dataset.raw || "") + ev.text;
+    current.innerHTML = mdRender(current.dataset.raw);
     follow();
   } else if (ev.type === "tool_use") {
     addToolRow(ev);
@@ -256,7 +313,8 @@ document.getElementById("composer").addEventListener("submit", (e) => {
 // vignette: turn 2 streams, the view scrolls up mid-stream (no yank),
 // the jump pill appears, then jumps back to latest
 window.VIGNETTE = () => {
-  // turn 1 has the 4.2s edit tool — watch its clock run
+  agent.preroll(onEvent, 3);   // next send is the markdown release-notes turn
+  box.value = "Draft the release notes";
   document.getElementById("composer").requestSubmit();
 };
 </script>
