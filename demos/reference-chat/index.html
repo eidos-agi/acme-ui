@@ -75,6 +75,12 @@ point is the distance between them.</p>
   01</a> in eidos-agi/ui-patterns: a scripted event stream (chat-events v1.1)
   and an acceptance checklist. Versions advance only by fixing a named failure
   from the checklist — growth you can diff.</p>
+  <p style="margin-top:.6rem">Every version talks to the same
+  <a href="https://github.com/eidos-agi/acme-ui/blob/master/demos/mock-ai/v1.js">mock
+  agent</a> — a scripted "server" speaking the event contract, abort semantics
+  and late-token traps included. The agent never changes between versions;
+  only the frontend grows up. New mock versions appear when a demo needs new
+  server behavior (replay, approvals).</p>
 </section>
 </body>
 </html>

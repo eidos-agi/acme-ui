@@ -1,0 +1,110 @@
+// Acme mock AI v1 — the "agent server" every demo frontend talks to.
+// Speaks chat-events v1.1 shapes (envelope: session_id, turn_id, seq) over a
+// callback. No network, fully scripted, but honest about the hard parts:
+// stop() emits abort and then LATE EVENTS for the dead turn — clients are
+// required to drop them (late-token suppression). Naive clients render them.
+//
+// API:
+//   const agent = MockAI.v1();
+//   const turn = agent.send(userText, (ev) => { ...render... });
+//   turn.stop();   // abort the live turn (no-op if already terminal)
+//
+// Turn behaviors cycle: 1 happy path with tools · 2 long stream (stoppable)
+// · 3 recoverable error mid-turn. New mock versions (v2: seq replay/resume,
+// approvals) appear when a demo needs the new server behavior.
+window.MockAI = (function () {
+  "use strict";
+
+  function deltas(text, chunk, gap) {
+    // split prose into word-ish deltas so clients get a real token stream
+    const out = [];
+    const words = text.split(/(?<= )/);
+    for (let i = 0; i < words.length; i += chunk) {
+      out.push([gap, { type: "text", mode: "delta", text: words.slice(i, i + chunk).join("") }]);
+    }
+    return out;
+  }
+
+  // [delay_ms, event]... per turn behavior
+  const TURN_SCRIPTS = [
+    // 1 — happy path with two tools (from ui-patterns brief 01)
+    () => [
+      [300, { type: "turn_start" }],
+      ...deltas("I'll scan the docs for broken links first.\n", 2, 45),
+      [150, { type: "tool_use", tool_use_id: "t1", name: "bash", label: "Scan 139 markdown files for links", input: { cmd: "grep -r …" } }],
+      [1800, { type: "tool_result", tool_use_id: "t1", status: "ok", metrics: { duration_ms: 1750 },
+        content: "412 links found, 9 broken:\ndocs/emf/index.md → ../missing.md\npatterns/catalog.md → cross-cutting/design-not-here.md\ndocs/emf/claims/streaming.md → ../../schemas/old.json\nharvests/popular/INDEX.md → micro/chat/gone.md\npatterns/agentic-chat/README.md → micro/removed.md\nreference/VISUAL.md → ../uizze-notes.md\npatterns/CANONICAL.md → catalog-v2.md\nREADME.md → docs/emf/intents/dead.md\nAGENTS.md → TELOS-old.md" }],
+      ...deltas("Found 9 broken links. Fixing them now — 7 are the same renamed folder.\n", 2, 45),
+      [200, { type: "tool_use", tool_use_id: "t2", name: "edit", label: "Rewrite 9 links across 4 files", input: { files: 4 } }],
+      [4200, { type: "tool_result", tool_use_id: "t2", status: "ok", metrics: { duration_ms: 4100 },
+        content: "4 files changed, 9 links now resolve" }],
+      ...deltas("Done — all 9 broken links fixed. 4 files touched; every link in the repo now resolves.", 2, 45),
+      [300, { type: "done", result: { turns: 1, latency_ms: 9000 } }],
+    ],
+    // 2 — long uninterrupted stream: exists so Stop has something to interrupt
+    () => [
+      [350, { type: "turn_start" }],
+      ...deltas(
+        "Starting with the root README. Rewriting the opening to center on the chat telos: the current text frames agentic chat as one domain among many, which the charter supersedes. I'll restate the mission in two sentences, move the domain table below the fold, freeze the non-chat rows behind the metric, and then do the same pass on the catalog so both documents agree on what this repo is for. After that I'll sweep AGENTS.md for the same framing and add the pointer to TELOS.md so a cold session lands on the contract before it lands on the file tree.",
+        2, 60),
+      [400, { type: "done", result: { turns: 1, latency_ms: 14000 } }],
+    ],
+    // 3 — recoverable error that keeps partial output
+    () => [
+      [350, { type: "turn_start" }],
+      ...deltas("Rewriting patterns/catalog.md opening…\n", 2, 45),
+      [900, { type: "error", code: "file_lock", recoverable: true, text: "catalog.md is locked by another process — retrying" }],
+      [1600, {}], // beat while "retrying"
+      ...deltas('Lock cleared. Opening now reads: "This repo exists to make agent-chat frontends excellent…"', 2, 45),
+      [400, { type: "done", result: { turns: 1, latency_ms: 4100 } }],
+    ],
+  ];
+
+  function v1() {
+    const session_id = "mock-" + Math.random().toString(36).slice(2, 8);
+    let seq = 0, turnCount = 0;
+    let timers = [], liveTurn = null, cb = null;
+
+    function emit(ev, turn_id) {
+      ev.session_id = session_id;
+      ev.turn_id = turn_id;
+      ev.seq = ++seq;
+      if (ev.type === "done" || ev.type === "abort" || (ev.type === "error" && !ev.recoverable)) {
+        if (turn_id === liveTurn) liveTurn = null;
+      }
+      cb && cb(ev);
+    }
+
+    return {
+      send(userText, onEvent) {
+        if (liveTurn !== null) return null; // one live turn per session
+        cb = onEvent;
+        turnCount += 1;
+        const turn_id = turnCount;
+        liveTurn = turn_id;
+        const script = TURN_SCRIPTS[(turnCount - 1) % TURN_SCRIPTS.length]();
+        let at = 0;
+        timers = [];
+        for (const [delay, ev] of script) {
+          at += delay;
+          if (!ev.type) continue; // scripted beat, no event
+          timers.push(setTimeout(() => emit(ev, turn_id), at));
+        }
+        return {
+          stop: () => {
+            if (liveTurn !== turn_id) return;
+            timers.forEach(clearTimeout);
+            emit({ type: "abort", reason: "user_stop" }, turn_id);
+            // The hard part: the wire is not instantly silent. Late events for
+            // the dead turn arrive AFTER abort; clients must drop them.
+            setTimeout(() => { cb && cb({ session_id, turn_id, seq: ++seq, type: "text", mode: "delta", text: " the chat telos and…" }); }, 200);
+            setTimeout(() => { cb && cb({ session_id, turn_id, seq: ++seq, type: "tool_use", tool_use_id: "t9", name: "edit", label: "ghost tool", input: {} }); }, 320);
+          },
+        };
+      },
+      get busy() { return liveTurn !== null; },
+    };
+  }
+
+  return { v1 };
+})();
