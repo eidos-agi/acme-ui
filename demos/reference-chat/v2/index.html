@@ -4,47 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Reference chat v2 — who's talking · Eidos UI</title>
+<link rel="stylesheet" href="/brand.css">
+<link rel="stylesheet" href="/demos/reference-chat/_base.css">
 <style>
-  :root {
-    --bg: #f0ebe4; --surface: #e4ded6; --ink: #1e1a17; --ink-soft: #8a8078;
-    --line: #d4cec6; --accent: #9a6d35; --accent-ink: #faf5ec;
-    --stop: #b4573b; --stop-ink: #ffffff;
-    --user-bg: #e4ded6; --tool-bg: #e9e3da;
-    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    --sans: 'Space Grotesk', -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#161210; --surface:#1e1a17; --ink:#dcd5cb; --ink-soft:#8b8179;
-      --line:#332c26; --accent:#c4935a; --accent-ink:#1e1a17;
-      --stop:#c4694f; --stop-ink:#161210;
-      --user-bg:#2a241e; --tool-bg:#211c17; }
-  }
-  * { box-sizing: border-box; margin: 0; }
-  body { background: var(--bg); color: var(--ink); font-family: var(--sans);
-    height: 100dvh; display: flex; flex-direction: column; }
-  header { padding: .8rem 1.25rem; border-bottom: 1px solid var(--line);
-    display: flex; align-items: baseline; gap: .8rem; }
-  header a { color: var(--accent); text-decoration: none; font-family: var(--mono); font-size: .75rem; }
-  header .tag { font-family: var(--mono); font-weight: 700; }
-  header .note { color: var(--ink-soft); font-size: .8rem; }
-  #log { flex: 1; overflow-y: auto; padding: 1.25rem; display: flex;
-    flex-direction: column; gap: .8rem; max-width: 46rem; width: 100%; margin: 0 auto; }
-  .msg { padding: .6rem .9rem; border-radius: 3px; white-space: pre-wrap;
-    line-height: 1.5; font-size: .95rem; }
+  /* v2 lesson: speaker identity — user accent right, agent left, ends first */
   .user { background: var(--accent); color: var(--accent-ink); align-self: flex-end; max-width: 85%; }
   .assistant { background: var(--surface); border: 1px solid var(--line); align-self: flex-start; max-width: 85%; }
   .tool { background: var(--tool-bg); border: 1px dashed var(--line);
     font-family: var(--mono); font-size: .8rem; color: var(--ink-soft);
     align-self: flex-start; max-width: 85%; }
-  .stopped { font-family: var(--mono); font-size: .75rem; color: var(--ink-soft);
-    padding: 0 .2rem; }
-  form { border-top: 1px solid var(--line); padding: .9rem 1.25rem; }
-  .row { display: flex; gap: .6rem; max-width: 46rem; margin: 0 auto; }
-  input { flex: 1; font: inherit; padding: .55rem .8rem; border-radius: 3px;
-    border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
-  button { font: inherit; padding: .55rem 1.1rem; border-radius: 3px; border: none;
-    background: var(--accent); color: var(--accent-ink); cursor: pointer; min-width: 4.6rem; }
-  button.stop { background: var(--stop); color: var(--stop-ink); }
 </style>
 </head>
 <body>
@@ -64,7 +32,7 @@
   </div>
 </form>
 
-<script src="../../mock-ai/v1.js"></script>
+<script src="/demos/mock-ai/v1.js"></script>
 <script>
 // v2 fixes SPEAKER IDENTITY on top of v1 (founder feedback 2026-08-03:
 // bubbles didn't make it obvious who is talking, and agent bubbles shared
@@ -156,17 +124,7 @@ document.getElementById("composer").addEventListener("submit", (e) => {
   handle = agent.send("", onEvent);
 });
 
-// shell autoplay: the shell posts "eidos-play" when its countdown veil lifts
-if (new URLSearchParams(location.search).has("autoplay")) {
-  let played = false;
-  const play = () => {
-    if (played) return; played = true;
-    const b = document.getElementById("btn");
-    if (b && !b.disabled) b.click();
-  };
-  window.addEventListener("message", (e) => { if (e.data === "eidos-play") play(); });
-  if (top === self) setTimeout(play, 800);
-}
 </script>
+<script src="/demos/reference-chat/_autoplay.js"></script>
 </body>
 </html>

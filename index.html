@@ -5,39 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Eidos UI — chat interfaces like the major companies</title>
 <meta name="description" content="Demo families for agent products: a chat frontend rebuilt version by version, and product shell mocks. Every version stays online, with source and copy-for-agent instructions.">
+<link rel="stylesheet" href="/brand.css">
 <style>
-  /* Eidos brand — warm workshop palette from eidos-agi/brand + design-system tokens. */
-  @font-face {
-    font-family: 'Space Grotesk';
-    src: url('fonts/SpaceGrotesk-latin.woff2') format('woff2');
-    font-weight: 300 700;
-    font-display: swap;
-  }
-  :root {
-    --bg: #f0ebe4; --surface: #e4ded6; --ink: #1e1a17; --ink-soft: #8a8078;
-    --line: #d4cec6; --accent: #9a6d35; --accent-ink: #faf5ec;
-    --badge-wip-bg: #e4ded6; --badge-wip-ink: #8a8078;
-    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    --sans: 'Space Grotesk', -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#161210; --surface:#1e1a17; --ink:#dcd5cb; --ink-soft:#8b8179;
-      --line:#332c26; --accent:#c4935a; --accent-ink:#1e1a17;
-      --badge-wip-bg:#28221c; --badge-wip-ink:#8b8179; }
-  }
-  * { box-sizing: border-box; margin: 0; }
-  body { background: var(--bg); color: var(--ink); font-family: var(--sans);
-    line-height: 1.5; display: grid; grid-template-columns: 18rem 1fr;
-    height: 100dvh; overflow: hidden; }
-  body.showing { grid-template-columns: 18rem minmax(0,1fr) 26rem; }
-
-  /* scrollbars, everywhere */
-  * { scrollbar-width: thin; scrollbar-color: var(--accent) transparent; }
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 99px;
-    border: 2px solid var(--bg); }
-  ::-webkit-scrollbar-thumb:hover { background: var(--ink-soft); }
 
   /* sidebar — always present */
   #side { overflow-y: auto; border-right: 1px solid var(--line);
@@ -45,6 +14,8 @@
   .wordmark { font-family: var(--mono); font-size: .95rem; letter-spacing: .12em;
     text-transform: uppercase; font-weight: 700; margin-bottom: .9rem; }
   .wordmark a { color: var(--accent); text-decoration: none; }
+  #side > .item { margin-bottom: .35rem; }
+  hr.sep { border: none; border-top: 1px solid var(--line); margin: .8rem 0 1rem; }
   nav.pills { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .6rem; }
   .pill { font-family: var(--mono); font-size: .68rem; padding: .2rem .6rem;
     border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
@@ -154,7 +125,9 @@
 <body>
 <div id="side">
   <div class="wordmark"><a href="#" id="home">Eidos UI</a></div>
-  <a class="item" href="#" id="homebtn" style="margin-bottom:.6rem"><svg class="ic" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Home</a>
+  <a class="item" href="#" id="homebtn"><svg class="ic" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Home</a>
+  <a class="item" href="https://eidosagi.com" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>EidosAGI.com</a>
+  <hr class="sep">
   <nav class="pills" id="pills"></nav>
   <div id="famlist"></div>
   <div class="sidelinks">
@@ -324,25 +297,35 @@ function loadCode(x) {
   }).catch(() => { srcEl.textContent = "could not load source"; });
 }
 
-function agentMarkdown(x, source) {
-  return [
-    "# Eidos UI — " + (x.tags.includes("shell") ? "product shell mock" : "agent chat") + " v" + x.v + ": " + x.title,
+async function agentMarkdown(x) {
+  const isChat = !x.tags.includes("shell") && !x.tags.includes("icons");
+  const parts = [
+    "# Eidos UI — v" + x.v + ": " + x.title,
     "", x.desc, "", "Why it matters: " + (x.why || ""), "",
     "## Instructions for an implementing agent", "",
-    "- This is a complete, self-contained reference implementation. Adapt the pattern: every color/size is a CSS custom property in one `:root` block — swap tokens for the host product.",
-    "- Chat demos consume a mock agent speaking chat-events v1.1: every event carries `{session_id, turn_id, seq}`; `text` events are deltas; `tool_use`/`tool_result` pair by `tool_use_id`; exactly one terminal event per turn (`done`, `abort`, or fatal `error`); events for a turn after its terminal event must be dropped.",
-    "- Mock agent source: https://ui.eidosagi.com/demos/mock-ai/v1.js",
-    "- Live demo: https://ui.eidosagi.com/" + x.href,
-    "", "## Full source (index.html)", "", "```html", source.trim(), "```", ""
-  ].join("\n");
+    "- Adapt the pattern for the host product. All colors/sizes are CSS custom properties in brand.css — swap tokens, keep behavior.",
+    "- The demo page holds ONLY this version's lesson; shared chrome lives in _base.css and shared tokens in brand.css (both included below, so this pack is self-contained).",
+  ];
+  if (isChat) parts.push(
+    "- Chat demos consume a mock agent speaking chat-events v1.1: every event carries `{session_id, turn_id, seq}`; `text` events are deltas; `tool_use`/`tool_result` pair by `tool_use_id`; exactly one terminal event per turn (`done`, `abort`, or fatal `error`); events for a turn after its terminal event must be dropped.");
+  parts.push("- Live demo: https://ui.eidosagi.com/" + x.href, "");
+  const files = [["index.html", x.href + "index.html", "html"], ["brand.css", "brand.css", "css"]];
+  if (isChat) files.push(
+    ["demos/reference-chat/_base.css", "demos/reference-chat/_base.css", "css"],
+    ["demos/reference-chat/_autoplay.js", "demos/reference-chat/_autoplay.js", "js"],
+    ["demos/mock-ai/v1.js", "demos/mock-ai/v1.js", "js"]);
+  for (const [name, url, lang] of files) {
+    const t = await (await fetch("/" + url.replace(/^\//, ""))).text();
+    parts.push("## " + name, "", "```" + lang, t.trim(), "```", "");
+  }
+  return parts.join("\n");
 }
 
 document.getElementById("copymd").onclick = async () => {
   if (!selected) return;
   const btn = document.getElementById("copymd");
   try {
-    const src = await (await fetch(selected.href + "index.html")).text();
-    await navigator.clipboard.writeText(agentMarkdown(selected, src));
+    await navigator.clipboard.writeText(await agentMarkdown(selected));
     btn.textContent = "copied ✓";
   } catch { btn.textContent = "copy failed"; }
   setTimeout(() => { btn.textContent = "Copy markdown"; }, 1600);

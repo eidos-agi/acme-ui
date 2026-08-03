@@ -1,0 +1,58 @@
+/* Eidos brand — the ONE canonical token sheet for the whole site.
+   Source: eidos-agi/brand palette + Eidos AGI Design System tokens.css.
+   Every page links this; demos keep NO token copies. Changing brand here
+   restyles every version, past and future — brand is retroactive, behavior
+   is frozen (see CONVENTIONS.md). */
+
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('/fonts/SpaceGrotesk-latin.woff2') format('woff2');
+  font-weight: 300 700;
+  font-display: swap;
+}
+
+:root {
+  --bg: #f0ebe4;
+  --surface: #e4ded6;
+  --ink: #1e1a17;
+  --ink-soft: #8a8078;
+  --line: #d4cec6;
+  --accent: #9a6d35;
+  --accent-ink: #faf5ec;
+  --stop: #b4573b;
+  --stop-ink: #ffffff;
+  --user-bg: #e4ded6;
+  --tool-bg: #e9e3da;
+  --badge-wip-bg: #e4ded6;
+  --badge-wip-ink: #8a8078;
+  --bad: #a04a32;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sans: 'Space Grotesk', -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --radius: 3px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161210;
+    --surface: #1e1a17;
+    --ink: #dcd5cb;
+    --ink-soft: #8b8179;
+    --line: #332c26;
+    --accent: #c4935a;
+    --accent-ink: #1e1a17;
+    --stop: #c4694f;
+    --stop-ink: #161210;
+    --user-bg: #2a241e;
+    --tool-bg: #211c17;
+    --badge-wip-bg: #28221c;
+    --badge-wip-ink: #8b8179;
+    --bad: #c4694f;
+  }
+}
+
+/* scrollbars: thin, accent, everywhere */
+* { scrollbar-width: thin; scrollbar-color: var(--accent) transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 99px;
+  border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-soft); }
