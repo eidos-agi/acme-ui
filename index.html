@@ -6,18 +6,24 @@
 <title>Eidos UI — chat interfaces like the major companies</title>
 <meta name="description" content="Demo families for agent products: a chat frontend rebuilt version by version, and product shell mocks. Every version stays online, with source and copy-for-agent instructions.">
 <style>
-  /* Eidos UI tokens — swap these to re-skin everything. */
+  /* Eidos brand — warm workshop palette from eidos-agi/brand + design-system tokens. */
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('fonts/SpaceGrotesk-latin.woff2') format('woff2');
+    font-weight: 300 700;
+    font-display: swap;
+  }
   :root {
-    --bg: #faf9f7; --surface: #ffffff; --ink: #1a1a1a; --ink-soft: #6b6a66;
-    --line: #e4e2dd; --accent: #0d5c4d; --accent-ink: #ffffff;
-    --badge-wip-bg: #f0ede6; --badge-wip-ink: #6b6a66;
+    --bg: #f0ebe4; --surface: #e4ded6; --ink: #1e1a17; --ink-soft: #8a8078;
+    --line: #d4cec6; --accent: #9a6d35; --accent-ink: #faf5ec;
+    --badge-wip-bg: #e4ded6; --badge-wip-ink: #8a8078;
     --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    --sans: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --sans: 'Space Grotesk', -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg:#141413; --surface:#1d1c1b; --ink:#ececea; --ink-soft:#98968f;
-      --line:#2e2d2a; --accent:#4fb39a; --accent-ink:#10201b;
-      --badge-wip-bg:#262523; --badge-wip-ink:#98968f; }
+    :root { --bg:#161210; --surface:#1e1a17; --ink:#dcd5cb; --ink-soft:#8b8179;
+      --line:#332c26; --accent:#c4935a; --accent-ink:#1e1a17;
+      --badge-wip-bg:#28221c; --badge-wip-ink:#8b8179; }
   }
   * { box-sizing: border-box; margin: 0; }
   body { background: var(--bg); color: var(--ink); font-family: var(--sans);
@@ -48,7 +54,7 @@
     letter-spacing: .08em; color: var(--ink-soft); margin: 1.1rem 0 .4rem; }
   .items { display: flex; flex-direction: column; gap: .2rem; }
   .item { display: flex; gap: .55rem; align-items: baseline; padding: .32rem .55rem;
-    border-radius: 5px; text-decoration: none; color: inherit; font-size: .85rem;
+    border-radius: 3px; text-decoration: none; color: inherit; font-size: .85rem;
     border: 1px solid transparent; }
   a.item:hover { border-color: var(--accent); }
   .item.planned { opacity: .55; }
@@ -70,7 +76,7 @@
   h2 { font-size: 1rem; margin: 1.6rem 0 .6rem; }
   ol.ladder { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .45rem; }
   .rung { display: flex; gap: .9rem; align-items: baseline; padding: .55rem .8rem;
-    border: 1px solid var(--line); border-radius: 6px; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 3px; background: var(--surface);
     text-decoration: none; color: inherit; }
   a.rung:hover { border-color: var(--accent); }
   .rung.planned { opacity: .62; }
@@ -97,7 +103,7 @@
   #veil.on { opacity: 1; visibility: visible; }
   #pierow { display: flex; align-items: center; gap: 2.2rem; }
   #skip { font: inherit; font-family: var(--mono); font-size: .8rem;
-    padding: .45rem .9rem; border-radius: 6px; border: 1px solid var(--line);
+    padding: .45rem .9rem; border-radius: 3px; border: 1px solid var(--line);
     background: var(--surface); color: var(--ink-soft); cursor: pointer; }
   #skip:hover { border-color: var(--accent); color: var(--accent); }
   #piewrap { perspective: 900px; }
@@ -135,7 +141,7 @@
   #code .head .why { color: var(--ink-soft); font-size: .82rem; margin-top: .3rem; }
   #code .actions { display: flex; gap: .5rem; margin-top: .7rem; }
   #code button, #code a.btn { font: inherit; font-size: .78rem; font-family: var(--mono);
-    padding: .38rem .7rem; border-radius: 6px; border: 1px solid var(--line);
+    padding: .38rem .7rem; border-radius: 3px; border: 1px solid var(--line);
     background: var(--surface); color: var(--ink); cursor: pointer; text-decoration: none; }
   #code button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
   #code .src { flex: 1; overflow: auto; padding: .9rem 1.1rem; }
