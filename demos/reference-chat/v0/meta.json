@@ -1,0 +1,9 @@
+{
+ "title": "The naive baseline",
+ "desc": "Text streams and tools run, but raw output dumps inline, the view jumps while you read, and there is no Stop button.",
+ "why": "The starting point. Shows what a chat UI feels like before any of the fixes, against the same mock agent as every later version.",
+ "tags": [
+  "streaming"
+ ],
+ "auto": true
+}

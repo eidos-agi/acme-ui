@@ -1,0 +1,9 @@
+{
+ "title": "Control",
+ "desc": "Send turns into Stop while the agent works. Stopping keeps the partial response, and events that arrive after a stop are ignored.",
+ "why": "Users trust a chat UI they can always interrupt. The turn_id check also stops late tokens from flickering in after a stop.",
+ "tags": [
+  "control"
+ ],
+ "auto": true
+}

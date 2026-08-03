@@ -1,0 +1,9 @@
+{
+ "title": "Who's talking",
+ "desc": "User messages are colored and sit on the right. Agent messages sit on the left and end before the user's edge, so you can tell who said what.",
+ "why": "Speaker identity should be readable at a glance, without reading a word. Color plus alignment does it in pure CSS.",
+ "tags": [
+  "design"
+ ],
+ "auto": true
+}

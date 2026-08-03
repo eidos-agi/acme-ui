@@ -3,54 +3,75 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Acme UI — a chat frontend, version by version</title>
-<meta name="description" content="An agent-chat frontend rebuilt version by version, v0 to v200+. Each version fixes one named problem. Every version stays online.">
+<title>Acme UI — chat interfaces like the major companies</title>
+<meta name="description" content="Demo families for agent products: a chat frontend rebuilt version by version, and product shell mocks. Every version stays online, with source and copy-for-agent instructions.">
 <style>
   /* Acme placeholder brand — swap these tokens to re-skin everything. */
   :root {
-    --bg: #faf9f7;
-    --surface: #ffffff;
-    --ink: #1a1a1a;
-    --ink-soft: #6b6a66;
-    --line: #e4e2dd;
-    --accent: #0d5c4d;
-    --accent-ink: #ffffff;
-    --badge-wip-bg: #f0ede6;
-    --badge-wip-ink: #6b6a66;
+    --bg: #faf9f7; --surface: #ffffff; --ink: #1a1a1a; --ink-soft: #6b6a66;
+    --line: #e4e2dd; --accent: #0d5c4d; --accent-ink: #ffffff;
+    --badge-wip-bg: #f0ede6; --badge-wip-ink: #6b6a66;
     --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     --sans: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #141413; --surface: #1d1c1b; --ink: #ececea; --ink-soft: #98968f;
-      --line: #2e2d2a; --accent: #4fb39a; --accent-ink: #10201b;
-      --badge-wip-bg: #262523; --badge-wip-ink: #98968f;
-    }
+    :root { --bg:#141413; --surface:#1d1c1b; --ink:#ececea; --ink-soft:#98968f;
+      --line:#2e2d2a; --accent:#4fb39a; --accent-ink:#10201b;
+      --badge-wip-bg:#262523; --badge-wip-ink:#98968f; }
   }
   * { box-sizing: border-box; margin: 0; }
-  body {
-    background: var(--bg); color: var(--ink);
-    font-family: var(--sans); line-height: 1.55;
-    max-width: 52rem; margin: 0 auto; padding: 2.5rem 1.5rem 4rem;
-  }
-  .wordmark { font-family: var(--mono); font-size: 1rem; letter-spacing: .12em;
-    text-transform: uppercase; color: var(--accent); font-weight: 700; }
-  h1 { font-size: 1.7rem; line-height: 1.2; margin: .5rem 0 .4rem; }
-  .sub { color: var(--ink-soft); max-width: 40rem; }
-  nav.pills { display: flex; flex-wrap: wrap; gap: .45rem; margin: 1.5rem 0 1.25rem;
-    position: sticky; top: 0; background: var(--bg); padding: .6rem 0; z-index: 2; }
-  .pill { font-family: var(--mono); font-size: .75rem; padding: .28rem .75rem;
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans);
+    line-height: 1.5; display: grid; grid-template-columns: 18rem 1fr;
+    height: 100dvh; overflow: hidden; }
+  body.showing { grid-template-columns: 18rem minmax(0,1fr) 26rem; }
+
+  /* scrollbars, everywhere */
+  * { scrollbar-width: thin; scrollbar-color: var(--accent) transparent; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 99px;
+    border: 2px solid var(--bg); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ink-soft); }
+
+  /* sidebar — always present */
+  #side { overflow-y: auto; border-right: 1px solid var(--line);
+    padding: 1.1rem .9rem 2rem; }
+  .wordmark { font-family: var(--mono); font-size: .95rem; letter-spacing: .12em;
+    text-transform: uppercase; font-weight: 700; margin-bottom: .9rem; }
+  .wordmark a { color: var(--accent); text-decoration: none; }
+  nav.pills { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .6rem; }
+  .pill { font-family: var(--mono); font-size: .68rem; padding: .2rem .6rem;
     border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
     color: var(--ink-soft); cursor: pointer; }
   .pill.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .fam { font-family: var(--mono); font-size: .68rem; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--ink-soft); margin: 1.1rem 0 .4rem; }
+  .items { display: flex; flex-direction: column; gap: .2rem; }
+  .item { display: flex; gap: .55rem; align-items: baseline; padding: .32rem .55rem;
+    border-radius: 5px; text-decoration: none; color: inherit; font-size: .85rem;
+    border: 1px solid transparent; }
+  a.item:hover { border-color: var(--accent); }
+  .item.planned { opacity: .55; }
+  .item .v { font-family: var(--mono); font-weight: 700; color: var(--accent); min-width: 2.2rem; }
+  .item.current { border-color: var(--accent); background: var(--surface); }
+  .sidelinks { margin-top: 1.4rem; font-family: var(--mono); font-size: .7rem;
+    color: var(--ink-soft); display: flex; flex-direction: column; gap: .3rem; }
+  .sidelinks a { color: inherit; }
+
+  /* main: welcome browse view, or countdown veil + demo iframe */
+  #main { min-width: 0; height: 100dvh; overflow: hidden; position: relative; }
+  #welcome { height: 100%; overflow-y: auto; padding: 2.2rem 2rem 4rem; }
+  #welcome .inner { max-width: 44rem; }
+  h1 { font-size: 1.6rem; line-height: 1.2; margin-bottom: .4rem; }
+  .sub { color: var(--ink-soft); margin-bottom: 1.4rem; }
+  h2 { font-size: 1rem; margin: 1.6rem 0 .6rem; }
   ol.ladder { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .45rem; }
   .rung { display: flex; gap: .9rem; align-items: baseline; padding: .55rem .8rem;
     border: 1px solid var(--line); border-radius: 6px; background: var(--surface);
     text-decoration: none; color: inherit; }
   a.rung:hover { border-color: var(--accent); }
   .rung.planned { opacity: .62; }
-  .rung .v { font-family: var(--mono); font-weight: 700; color: var(--accent);
-    min-width: 2.9rem; }
+  .rung .v { font-family: var(--mono); font-weight: 700; color: var(--accent); min-width: 2.9rem; }
   .rung .body { flex: 1; }
   .rung .title { font-weight: 600; font-size: .95rem; }
   .rung .desc { font-size: .85rem; color: var(--ink-soft); }
@@ -59,172 +80,266 @@
     letter-spacing: .06em; padding: .14rem .5rem; border-radius: 999px;
     background: var(--badge-wip-bg); color: var(--badge-wip-ink); white-space: nowrap; }
   .rung .status.live { background: var(--accent); color: var(--accent-ink); }
-  .tail { margin-top: 1rem; font-family: var(--mono); font-size: .8rem; color: var(--ink-soft); }
-  section.about { margin-top: 2.5rem; border-top: 1px solid var(--line); padding-top: 1.25rem;
-    color: var(--ink-soft); font-size: .9rem; max-width: 40rem; }
-  section.about a { color: var(--accent); }
-  footer { margin-top: 2rem; font-family: var(--mono); font-size: .75rem; color: var(--ink-soft); }
-  footer a { color: inherit; }
+  .note { color: var(--ink-soft); font-size: .9rem; margin-top: 1.4rem; }
+  .note a { color: var(--accent); }
+  #pane { display: none; width: 100%; height: 100dvh; border: none; background: var(--bg); }
+  body.showing #welcome { display: none; }
+  body.showing #pane { display: block; }
 
-  /* split view: sidebar list + live demo pane, entered by clicking a live rung */
-  .wordmark a { color: inherit; text-decoration: none; }
-  #pane { display: none; }
-  body.split { max-width: none; padding: 0; display: grid;
-    grid-template-columns: 21rem 1fr; height: 100dvh; overflow: hidden; }
-  body.split #side { overflow-y: auto; padding: 1.25rem 1rem;
-    border-right: 1px solid var(--line); min-width: 0; }
-  body.split #pane { display: block; width: 100%; height: 100dvh; border: none;
-    background: var(--bg); }
-  body.split h1, body.split .sub, body.split .about, body.split .tail,
-  body.split footer, body.split .shellmocks { display: none; }
-  body.split .rung { padding: .45rem .6rem; gap: .55rem; }
-  body.split .rung .desc, body.split .rung .tags { display: none; }
-  body.split .rung .status { display: none; }
-  .rung.current { border-color: var(--accent); box-shadow: inset 2px 0 0 var(--accent); }
-  @media (max-width: 50rem) { body.split { grid-template-columns: 11rem 1fr; } }
+  /* countdown veil: big pie, 100% -> 0, then the demo plays itself */
+  #veil { position: absolute; inset: 0; background: var(--bg); display: none;
+    align-items: center; justify-content: center; flex-direction: column; gap: 1.2rem;
+    z-index: 5; }
+  #veil.on { display: flex; }
+  #pie { width: 11rem; height: 11rem; border-radius: 50%;
+    background: conic-gradient(var(--accent) 100%, var(--line) 0); }
+  #pienum { font-family: var(--mono); font-size: 2rem; font-weight: 700; color: var(--accent); }
+  #vielabel { color: var(--ink-soft); font-size: .9rem; }
+
+  /* right code panel */
+  #code { display: none; border-left: 1px solid var(--line); height: 100dvh;
+    overflow: hidden; flex-direction: column; }
+  body.showing #code { display: flex; }
+  #code .head { padding: 1rem 1.1rem .8rem; border-bottom: 1px solid var(--line); }
+  #code .head .t { font-weight: 700; font-size: .95rem; }
+  #code .head .why { color: var(--ink-soft); font-size: .82rem; margin-top: .3rem; }
+  #code .actions { display: flex; gap: .5rem; margin-top: .7rem; }
+  #code button, #code a.btn { font: inherit; font-size: .78rem; font-family: var(--mono);
+    padding: .38rem .7rem; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--surface); color: var(--ink); cursor: pointer; text-decoration: none; }
+  #code button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  #code .src { flex: 1; overflow: auto; padding: .9rem 1.1rem; }
+  #code .src pre { font-family: var(--mono); font-size: .7rem; line-height: 1.5;
+    color: var(--ink-soft); white-space: pre; }
+  @media (max-width: 68rem) { body.showing { grid-template-columns: 12rem minmax(0,1fr); }
+    body.showing #code { display: none; } }
 </style>
 </head>
 <body>
 <div id="side">
-<header>
   <div class="wordmark"><a href="#" id="home">Acme UI</a></div>
-  <h1>Chat interfaces like the major companies.</h1>
-  <p class="sub">Two families: <strong>agent chat</strong> (stream, tools, stop)
-  and <strong>product shell mocks</strong> (desktop + phone chrome, IA choosers).
-  Each version fixes one named problem and stays online.</p>
-</header>
-
-<section class="about shellmocks" style="margin-top:1.25rem;border-top:none;padding-top:0">
-  <p style="margin-bottom:.75rem"><strong>Product shell mocks</strong> —
-  multi-surface IA before native code.
-  <a href="demos/product-shell-mock/">Open family</a> ·
-  <a href="demos/product-shell-mock/v0/">v0 context pills (live)</a> ·
-  <a href="demos/product-shell-mock/TECHNIQUE.md">technique</a></p>
-</section>
-
-<p class="sub" style="margin:1.5rem 0 .5rem;font-family:var(--mono);font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft)">Reference chat ladder</p>
-<nav class="pills" id="pills"></nav>
-
-<ol class="ladder" id="ladder"></ol>
-<p class="tail">More chat versions get added as they ship. v200 or beyond if it
-takes that many.</p>
-
-<section class="about">
-  <p>Chat versions are checked against the acceptance list in
-  <a href="https://github.com/eidos-agi/ui-patterns/blob/main/briefs/01-reference-chat-demo.md">brief 01</a>
-  of <a href="https://github.com/eidos-agi/ui-patterns">eidos-agi/ui-patterns</a>.
-  Every chat demo talks to the same
-  <a href="https://github.com/eidos-agi/acme-ui/blob/master/demos/mock-ai/v1.js">mock agent</a>
-  (chat-events v1.1). Shell mocks use only in-page JS — no mock-ai.
-  Acme is a placeholder brand; CSS tokens re-skin everything.
-  Source: <a href="https://github.com/eidos-agi/acme-ui">eidos-agi/acme-ui</a>.</p>
-</section>
-
-<footer>
-  <a href="https://eidosagi.com">eidos agi</a> · acme is a placeholder brand
-</footer>
+  <nav class="pills" id="pills"></nav>
+  <div id="famlist"></div>
+  <div class="sidelinks">
+    <a href="https://github.com/eidos-agi/acme-ui">source: eidos-agi/acme-ui</a>
+    <a href="https://github.com/eidos-agi/ui-patterns">patterns: eidos-agi/ui-patterns</a>
+    <a href="demos/product-shell-mock/TECHNIQUE.md">shell-mock technique</a>
+    <a href="https://eidosagi.com">eidos agi</a>
+  </div>
 </div>
-<iframe id="pane" title="version demo"></iframe>
+
+<div id="main">
+  <div id="welcome">
+    <div class="inner">
+      <h1>Chat interfaces like the major companies.</h1>
+      <p class="sub">Demos for agent products, rebuilt version by version. Each
+      version fixes one named problem and stays online. Click anything in the
+      sidebar: the demo plays itself, the source shows on the right, and one
+      button copies agent-ready instructions for using the pattern in your own
+      app.</p>
+      <div id="detail"></div>
+      <p class="note">Chat versions are checked against the acceptance list in
+      <a href="https://github.com/eidos-agi/ui-patterns/blob/main/briefs/01-reference-chat-demo.md">brief 01</a>
+      of eidos-agi/ui-patterns. Every chat demo talks to the same
+      <a href="https://github.com/eidos-agi/acme-ui/blob/master/demos/mock-ai/v1.js">mock agent</a>
+      (chat-events v1.1); the agent code never changes between versions. Shell
+      mocks use only in-page JS. Acme is a placeholder brand; colors and sizes
+      are CSS tokens you can swap.</p>
+    </div>
+  </div>
+  <div id="veil"><div id="pie"></div><div id="pienum">100%</div>
+    <div id="vielabel">loading the demo, then it plays itself</div></div>
+  <iframe id="pane" title="demo"></iframe>
+</div>
+
+<div id="code">
+  <div class="head">
+    <div class="t" id="codetitle"></div>
+    <div class="why" id="codewhy"></div>
+    <div class="actions">
+      <button class="primary" id="copymd">Copy markdown</button>
+      <a class="btn" id="rawlink" target="_blank" rel="noopener">Open raw</a>
+    </div>
+  </div>
+  <div class="src"><pre id="src">loading source…</pre></div>
+</div>
 
 <script>
-// The ladder is data. Ship a version → flip live:true, set href, append the
-// next planned rungs. Tags drive the filter pills automatically.
-const VERSIONS = [
-  { v: 0,  live: true,  href: "demos/reference-chat/v0/",
-    title: "The naive baseline",
-    desc: "Text streams and tools run, but raw output dumps inline, the view jumps while you read, and there is no Stop button.",
-    tags: ["streaming"] },
-  { v: 1,  live: true,  href: "demos/reference-chat/v1/",
-    title: "Control",
-    desc: "Send turns into Stop while the agent works. Stopping keeps the partial response, and events that arrive after a stop are ignored.",
-    tags: ["control"] },
-  { v: 2,  live: true,  href: "demos/reference-chat/v2/",
-    title: "Who's talking",
-    desc: "User messages are colored and sit on the right. Agent messages sit on the left and end before the user's edge, so you can tell who said what.",
-    tags: ["design"] },
-  { v: 3,  live: true,  href: "demos/reference-chat/v3/",
-    title: "Tool disclosure",
-    desc: "Tool calls render as one collapsed row: name, label, a spinner while running, then a check and duration. Click to expand the full input and result.",
-    tags: ["disclosure"] },
-  { v: 4,  title: "Scroll pin", desc: "The view follows new output only while you are at the bottom. Scrolling up stops the following; a button jumps back to the latest message.", tags: ["scroll"] },
-  { v: 5,  title: "Calm errors", desc: "A recoverable error shows as a small inline note. Partial output stays, and the turn continues after recovery.", tags: ["errors"] },
-  { v: 6,  title: "Thinking + TTFT", desc: "A thinking indicator fills the gap between pressing send and the first token arriving.", tags: ["streaming"] },
-  { v: 7,  title: "Elapsed on slow tools", desc: "Tools that run long show elapsed time while they work.", tags: ["disclosure"] },
-  { v: 8,  title: "Safe markdown stream", desc: "Markdown renders progressively during the stream, sanitized, without flicker from half-open elements.", tags: ["markdown","streaming"] },
-  { v: 9,  title: "Stream grain", desc: "A cursor caret and tuned token batching make the stream read smoothly instead of stuttering.", tags: ["streaming"] },
-  { v: 10, title: "Composer ergonomics", desc: "The input box grows with its content. Enter sends, Shift-Enter adds a line.", tags: ["composer"] },
-  { v: 11, title: "Optimistic send", desc: "The user message appears immediately on send. If sending fails, the message is marked inline with a retry option.", tags: ["composer","errors"] },
-  { v: 12, title: "Approval card", desc: "A risky tool call shows an approve/deny card in the transcript, and the agent waits for the decision. Needs mock v2.", tags: ["approvals"] },
-  { v: 13, title: "Danger grading", desc: "Approval cards vary by risk level. Safe tools run without asking; risky ones wait.", tags: ["approvals"] },
-  { v: 14, title: "Reconnect + replay", desc: "After a connection drop, the client resumes from its last sequence number and the missed events replay. Needs mock v2.", tags: ["resume"] },
-  { v: 15, title: "Thread isolation", desc: "Each thread keeps its own draft and its own stream. Switching threads mid-stream does not mix content.", tags: ["threads"] },
-  { v: 16, title: "Screen-reader-safe streaming", desc: "A live region announces streamed text at a readable rate for screen readers instead of token by token.", tags: ["a11y","streaming"] },
-  { v: 17, title: "Focus discipline", desc: "Focus returns to the input box after actions, and the transcript is fully keyboard-navigable.", tags: ["a11y"] },
-  { v: 18, title: "Hover without shift", desc: "Message actions appear on hover without shifting the layout.", tags: ["polish"] },
-  { v: 19, title: "Parallel tools", desc: "Several tools running at once render as separate rows, each with its own state.", tags: ["disclosure"] },
-  { v: 20, title: "Oversized results", desc: "Large tool output shows a short summary inline. The full content loads on demand via content_full_ref.", tags: ["disclosure"] },
-  { v: 21, title: "Task tree", desc: "Sub-agents and nested work render as a collapsible tree.", tags: ["disclosure"] },
-  { v: 22, title: "Artifact pane", desc: "Generated documents open in a side pane next to the chat.", tags: ["layout"] },
-  { v: 23, title: "Selection-scoped edit", desc: "Select part of an artifact and request a change scoped to that selection.", tags: ["layout"] },
-  { v: 24, title: "Mobile ergonomics", desc: "Keyboard avoidance, safe areas, and touch target sizes for phones.", tags: ["mobile"] },
-  { v: 25, title: "Long-transcript performance", desc: "The transcript stays smooth with thousands of messages, via virtualization.", tags: ["performance"] },
-];
+// All navigation is data. Ship a version: flip live:true, set href + why,
+// append planned rungs. Families render the sidebar and the detail list.
+// Versions come from the server: /api/versions scans demos/<family>/v<N>/
+// dirs (each with meta.json) and appends planned.json rungs. Add a vN dir,
+// it appears here — v0 to v200, no page edit needed.
+let FAMILIES = [];
 
 const pillsEl = document.getElementById("pills");
-const ladderEl = document.getElementById("ladder");
-const tags = ["all", "live", ...[...new Set(VERSIONS.flatMap(x => x.tags))]];
-let active = "all";
+const famEl = document.getElementById("famlist");
+const detailEl = document.getElementById("detail");
+const pane = document.getElementById("pane");
+const veil = document.getElementById("veil");
+const pie = document.getElementById("pie");
+const pienum = document.getElementById("pienum");
+let tags = ["all", "live"];
+let activeTag = "all";
+let selected = null;  // the open item, or null
+let veilTimer = null;
+
+function pass(x, fam) {
+  if (!fam.filterable) return true;
+  if (activeTag === "live") return !!x.live;
+  if (activeTag !== "all") return x.tags.includes(activeTag);
+  return true;
+}
 
 function renderPills() {
   pillsEl.innerHTML = "";
   for (const t of tags) {
     const b = document.createElement("button");
-    b.className = "pill" + (t === active ? " on" : "");
+    b.className = "pill" + (t === activeTag ? " on" : "");
     b.textContent = t;
-    b.onclick = () => { active = t; renderPills(); renderLadder(); };
+    b.onclick = () => { activeTag = t; renderAll(); };
     pillsEl.appendChild(b);
   }
 }
 
-function renderLadder() {
-  ladderEl.innerHTML = "";
-  for (const x of VERSIONS) {
-    if (active === "live" && !x.live) continue;
-    if (active !== "all" && active !== "live" && !x.tags.includes(active)) continue;
-    const el = document.createElement(x.live ? "a" : "div");
-    el.className = "rung" + (x.live ? "" : " planned") + (x.v === selected ? " current" : "");
-    if (x.live) {
-      el.href = "#v" + x.v;
-      el.onclick = (e) => { e.preventDefault(); location.hash = "v" + x.v; };
-    }
+function itemRow(x, compact) {
+  const el = document.createElement(x.live ? "a" : "div");
+  const cur = selected && x.href === selected.href;
+  el.className = (compact ? "item" : "rung") + (x.live ? "" : " planned") + (cur ? " current" : "");
+  if (x.live) {
+    el.href = "#" + x.href;
+    el.onclick = (e) => { e.preventDefault(); location.hash = x.href; };
+  }
+  if (compact) {
+    el.innerHTML = '<span class="v">v' + x.v + '</span><span>' + x.title + '</span>';
+  } else {
     el.innerHTML =
       '<span class="v">v' + x.v + '</span>' +
       '<span class="body"><span class="title">' + x.title + '</span> ' +
       '<span class="desc">— ' + x.desc + '</span> ' +
       '<span class="tags">' + x.tags.join(" · ") + '</span></span>' +
       '<span class="status' + (x.live ? " live" : "") + '">' + (x.live ? "live" : "planned") + '</span>';
-    ladderEl.appendChild(el);
+  }
+  return el;
+}
+
+function renderSidebar() {
+  famEl.innerHTML = "";
+  for (const fam of FAMILIES) {
+    const h = document.createElement("div");
+    h.className = "fam"; h.textContent = fam.name;
+    famEl.appendChild(h);
+    const box = document.createElement("div");
+    box.className = "items";
+    for (const x of fam.items) if (pass(x, fam)) box.appendChild(itemRow(x, true));
+    famEl.appendChild(box);
   }
 }
 
-const pane = document.getElementById("pane");
-let selected = null;
+function renderDetail() {
+  detailEl.innerHTML = "";
+  for (const fam of FAMILIES) {
+    const h = document.createElement("h2");
+    h.textContent = fam.name;
+    detailEl.appendChild(h);
+    const list = document.createElement("ol");
+    list.className = "ladder";
+    for (const x of fam.items) if (pass(x, fam)) list.appendChild(itemRow(x, false));
+    detailEl.appendChild(list);
+  }
+}
+
+function renderAll() { renderPills(); renderSidebar(); renderDetail(); }
+
+// countdown pie: 100% -> 0 over 2.2s while the iframe loads underneath;
+// demos started with ?autoplay=1 run their own turn right after the veil.
+function runVeil() {
+  clearInterval(veilTimer);
+  veil.classList.add("on");
+  const t0 = performance.now(), DUR = 2200;
+  veilTimer = setInterval(() => {
+    const left = Math.max(0, 1 - (performance.now() - t0) / DUR);
+    const pct = Math.round(left * 100);
+    pie.style.background = "conic-gradient(var(--accent) " + pct + "%, var(--line) 0)";
+    pienum.textContent = pct + "%";
+    if (left <= 0) { clearInterval(veilTimer); veil.classList.remove("on"); }
+  }, 40);
+}
+
+function loadCode(x) {
+  document.getElementById("codetitle").textContent = "v" + x.v + " — " + x.title;
+  document.getElementById("codewhy").textContent = x.why || x.desc;
+  document.getElementById("rawlink").href = x.href + "index.html";
+  const srcEl = document.getElementById("src");
+  srcEl.textContent = "loading source…";
+  fetch(x.href + "index.html").then(r => r.text()).then(t => {
+    if (selected && selected.href === x.href) srcEl.textContent = t;
+  }).catch(() => { srcEl.textContent = "could not load source"; });
+}
+
+function agentMarkdown(x, source) {
+  return [
+    "# Acme UI — " + (x.tags.includes("shell") ? "product shell mock" : "agent chat") + " v" + x.v + ": " + x.title,
+    "", x.desc, "", "Why it matters: " + (x.why || ""), "",
+    "## Instructions for an implementing agent", "",
+    "- This is a complete, self-contained reference implementation. Adapt the pattern, not the placeholder brand: every color/size is a CSS custom property in one `:root` block — swap tokens for the host product.",
+    "- Chat demos consume a mock agent speaking chat-events v1.1: every event carries `{session_id, turn_id, seq}`; `text` events are deltas; `tool_use`/`tool_result` pair by `tool_use_id`; exactly one terminal event per turn (`done`, `abort`, or fatal `error`); events for a turn after its terminal event must be dropped.",
+    "- Mock agent source: https://acme-ui.eidosagi.com/demos/mock-ai/v1.js",
+    "- Live demo: https://acme-ui.eidosagi.com/" + x.href,
+    "", "## Full source (index.html)", "", "```html", source.trim(), "```", ""
+  ].join("\n");
+}
+
+document.getElementById("copymd").onclick = async () => {
+  if (!selected) return;
+  const btn = document.getElementById("copymd");
+  try {
+    const src = await (await fetch(selected.href + "index.html")).text();
+    await navigator.clipboard.writeText(agentMarkdown(selected, src));
+    btn.textContent = "copied ✓";
+  } catch { btn.textContent = "copy failed"; }
+  setTimeout(() => { btn.textContent = "Copy markdown"; }, 1600);
+};
 
 function applyHash() {
-  const m = location.hash.match(/^#v(\d+)$/);
-  const x = m && VERSIONS.find(v => v.v === +m[1] && v.live);
-  selected = x ? x.v : null;
-  document.body.classList.toggle("split", !!x);
-  const target = x ? x.href : "about:blank";
-  if (pane.getAttribute("src") !== target) pane.src = target;
-  renderLadder();
+  let h = decodeURIComponent(location.hash.replace(/^#/, ""));
+  const legacy = h.match(/^v(\d+)$/);
+  if (legacy) {
+    const chat = FAMILIES.find(f => f.filterable);
+    const x = chat && chat.items.find(c => c.v === +legacy[1] && c.live);
+    h = x ? x.href : "";
+  }
+  const item = FAMILIES.flatMap(f => f.items).find(x => x.live && x.href === h) || null;
+  const prev = selected;
+  selected = item;
+  document.body.classList.toggle("showing", !!item);
+  if (item) {
+    const target = item.href + (item.auto ? "?autoplay=1" : "");
+    if (!prev || prev.href !== item.href) {
+      pane.src = target;
+      runVeil();
+      loadCode(item);
+    }
+  } else {
+    pane.src = "about:blank";
+    veil.classList.remove("on");
+  }
+  renderAll();
 }
 
 document.getElementById("home").onclick = (e) => { e.preventDefault(); location.hash = ""; };
 window.addEventListener("hashchange", applyHash);
 
-renderPills();
-applyHash();
+(async function boot() {
+  try {
+    FAMILIES = (await (await fetch("/api/versions")).json()).families;
+    const filterables = FAMILIES.filter(f => f.filterable);
+    tags = ["all", "live", ...new Set(filterables.flatMap(f => f.items.flatMap(x => x.tags || [])))];
+  } catch (e) {
+    document.getElementById("detail").textContent = "version index unavailable — /api/versions did not answer";
+  }
+  applyHash();
+})();
 </script>
 </body>
 </html>

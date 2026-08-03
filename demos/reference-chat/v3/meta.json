@@ -1,0 +1,9 @@
+{
+ "title": "Tool disclosure",
+ "desc": "Tool calls render as one collapsed row: name, label, a spinner while running, then a check and duration. Click to expand the full input and result.",
+ "why": "You can tell what the agent is doing in one second, and the full evidence is one click away. No raw dumps in the transcript.",
+ "tags": [
+  "disclosure"
+ ],
+ "auto": true
+}

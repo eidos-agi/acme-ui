@@ -113,6 +113,14 @@ document.getElementById("composer").addEventListener("submit", (e) => {
   box.disabled = true;
   agent.send("", onEvent);
 });
+
+// shell autoplay: ?autoplay=1 plays the scripted turn after the countdown veil
+if (new URLSearchParams(location.search).has("autoplay")) {
+  setTimeout(() => {
+    const b = document.getElementById("send");
+    if (b && !b.disabled) b.click();
+  }, 2400);
+}
 </script>
 </body>
 </html>

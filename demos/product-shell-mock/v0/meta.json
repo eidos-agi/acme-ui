@@ -1,0 +1,8 @@
+{
+ "title": "Context pills",
+ "desc": "Desktop window and phone bezel with shared state. A pill strip chooses context; content filters live. For settling information architecture before native code.",
+ "why": "Answers 'where does this control live?' across desktop and phone before anyone writes Swift or React Native.",
+ "tags": [
+  "shell"
+ ]
+}
