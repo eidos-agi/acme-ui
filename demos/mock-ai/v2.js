@@ -136,18 +136,23 @@ window.MockAI.v2 = (function () {
         turnCount += 1;
         const turn_id = turnCount;
         liveTurn = turn_id;
-        const want = EXPECTED[scriptIdx % EXPECTED.length];
+        const cycleIdx = scriptIdx % EXPECTED.length;
+        const matchIdx = (userText && norm(userText))
+          ? EXPECTED.findIndex((pr) => norm(pr) === norm(userText))
+          : cycleIdx;
         let script;
-        if (userText && norm(userText) && norm(userText) !== norm(want)) {
+        if (matchIdx === -1) {
           // off-script: say so, teach the next line, don't burn a script
           script = [
             [300, { type: "turn_start" }],
-            ...deltas('I\'m a scripted demo, so I only know my rehearsed lines. Try asking: "' + want + '"', 2, 95),
+            ...deltas('I\'m a scripted demo, so I only know my rehearsed lines. Try asking: "' + EXPECTED[cycleIdx] + '"', 2, 95),
             [300, { type: "done", result: { turns: 1, latency_ms: 1500 } }],
           ];
         } else {
-          script = TURN_SCRIPTS[scriptIdx % TURN_SCRIPTS.length]();
-          scriptIdx += 1;
+          // any known prompt plays its script, any number of times; the cycle
+          // pointer only advances when you follow it in order
+          script = TURN_SCRIPTS[matchIdx]();
+          if (matchIdx === cycleIdx) scriptIdx += 1;
         }
         let at = 0;
         timers = [];

@@ -154,7 +154,7 @@
   </div>
 </form>
 
-<script src="/demos/mock-ai/v2.js?v=1"></script>
+<script src="/demos/mock-ai/v2.js?v=2"></script>
 <script>
 // v14 fixes GRADING on top of v13: approval cards carry the tool's declared
 // danger level as a visible badge and border (high = terracotta, medium =
@@ -497,13 +497,26 @@ document.getElementById("composer").addEventListener("submit", (e) => {
 // vignette: turn 2 streams, the view scrolls up mid-stream (no yank),
 // the jump pill appears, then jumps back to latest
 window.VIGNETTE = () => {
-  agent.preroll(onEvent, 4);  // next send lines up with the approval script       // audit turn: danger-free tools ran, no cards
-  box.value = "Clean up the old release branches";
-  document.getElementById("composer").requestSubmit();
-  const iv = setInterval(() => {
-    const deny = log.querySelector(".apcard:not(.decided) .deny");
-    if (deny) { clearInterval(iv); setTimeout(() => deny.click(), 2400); }
-  }, 200);
+  agent.preroll(onEvent, 4);
+  const ask = () => {
+    box.value = "Clean up the old release branches";
+    document.getElementById("composer").requestSubmit();
+  };
+  const decide = (sel, next) => {
+    const iv = setInterval(() => {
+      const b = log.querySelector(".apcard:not(.decided) " + sel);
+      if (b) { clearInterval(iv); setTimeout(() => { b.click(); if (next) next(); }, 2000); }
+    }, 200);
+  };
+  ask();
+  decide(".deny", () => {          // first pass: deny, watch the graceful close
+    const iv2 = setInterval(() => {
+      if (btn.textContent === "Send") {
+        clearInterval(iv2);
+        setTimeout(() => { ask(); decide(".approve", null); }, 1400);
+      }
+    }, 250);
+  });
 };
 </script>
 <script src="/demos/reference-chat/_autoplay.js?v=7"></script>
