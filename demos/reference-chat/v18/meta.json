@@ -1,0 +1,10 @@
+{
+ "title": "Empty state + suggestion chips",
+ "desc": "A fresh thread offers clickable chips of the rehearsed prompts; after every completed turn a dashed chip above the composer suggests the next line. Nobody stares at an empty box.",
+ "why": "The empty state is the first thing every user sees and most chats waste it. Chips turn the mock's script from a secret into the interface.",
+ "tags": [
+  "composer",
+  "onboarding"
+ ],
+ "auto": true
+}

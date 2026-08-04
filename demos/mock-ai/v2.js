@@ -194,6 +194,8 @@ window.MockAI.v2 = (function () {
         };
       },
       get busy() { return liveTurn !== null; },
+      get prompts() { return EXPECTED.slice(); },
+      get nextPrompt() { return EXPECTED[scriptIdx % EXPECTED.length]; },
       // Resume: synchronously re-deliver every journaled event after last_seq.
       // This IS the spec's reconnect story — seq is the cursor.
       replay(last_seq, onEvent) {

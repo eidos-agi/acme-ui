@@ -1,0 +1,11 @@
+{
+ "title": "Copy actions",
+ "desc": "Every message grows a hover copy button and every fenced code block gets its own. Actions position absolutely so nothing shifts a pixel, copy takes the markdown source, and focus returns to the composer afterward.",
+ "why": "Copy is the most-used action in any chat, and layout shift on hover is how interfaces feel cheap. Folded in: focus discipline.",
+ "tags": [
+  "actions",
+  "polish",
+  "a11y"
+ ],
+ "auto": true
+}

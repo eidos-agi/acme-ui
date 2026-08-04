@@ -1,0 +1,10 @@
+{
+ "title": "Interrupt and redirect",
+ "desc": "The composer never locks while the agent streams. With text typed, the button reads Interrupt and Enter stops the turn and sends the new message in one motion; Alt+Enter queues it to auto-send after the turn, cancellable above the composer.",
+ "why": "Stop alone is half the story \u2014 the reason you stop an agent is to say something new. Redirect makes that one motion instead of two.",
+ "tags": [
+  "control",
+  "composer"
+ ],
+ "auto": true
+}

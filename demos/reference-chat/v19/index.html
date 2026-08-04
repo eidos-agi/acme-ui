@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reference chat v16 — thread isolation · Eidos UI</title>
+<title>Reference chat v19 — copy actions · Eidos UI</title>
 <link rel="stylesheet" href="/brand.css?v=7">
 <link rel="stylesheet" href="/demos/reference-chat/_base.css?v=7">
 <style>
@@ -157,38 +157,74 @@
   .tlog { flex: 1; overflow-y: auto; padding: 1.25rem; display: none;
     flex-direction: column; gap: .8rem; max-width: 46rem; width: 100%; margin: 0 auto; }
   .tlog.active { display: flex; }
+  /* v17 lesson: announce sanely */
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  /* v18 lesson: the empty state teaches; the next move is always offered */
+  .emptystate { margin: auto; text-align: center; max-width: 30rem; }
+  .es-title { color: var(--ink-soft); font-size: .95rem; margin-bottom: 1rem; }
+  .es-chips { display: flex; flex-direction: column; gap: .5rem; align-items: center; }
+  .chip { font: inherit; font-size: .88rem; padding: .5rem 1rem; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    cursor: pointer; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  #nextchip { display: none; font: inherit; font-family: var(--mono); font-size: .72rem;
+    padding: .3rem .8rem; border-radius: 999px; border: 1px dashed var(--line);
+    background: none; color: var(--ink-soft); cursor: pointer; margin: 0 auto .5rem;
+    max-width: 46rem; }
+  #nextchip.show { display: block; }
+  #nextchip:hover { border-color: var(--accent); color: var(--accent); }
+  /* v19 lesson: actions on hover, zero layout shift, focus comes home */
+  .msg { position: relative; }
+  .msgact { position: absolute; top: .3rem; right: .3rem; opacity: 0;
+    transition: opacity .15s ease; }
+  .msg:hover .msgact, .msgact:focus-within { opacity: 1; }
+  .msgact button { font: inherit; font-family: var(--mono); font-size: .65rem;
+    padding: .2rem .5rem; border-radius: var(--radius); border: 1px solid var(--line);
+    background: var(--bg); color: var(--ink-soft); cursor: pointer; }
+  .msgact button:hover { border-color: var(--accent); color: var(--accent); }
+  .msg.user .msgact button { background: color-mix(in srgb, var(--accent) 85%, black);
+    color: var(--accent-ink); border-color: transparent; }
+  pre { position: relative; }
+  .precopy { position: absolute; top: .35rem; right: .35rem; font-family: var(--mono);
+    font-size: .62rem; padding: .15rem .45rem; border-radius: var(--radius);
+    border: 1px solid var(--line); background: var(--bg); color: var(--ink-soft);
+    cursor: pointer; opacity: 0; transition: opacity .15s ease; }
+  pre:hover .precopy { opacity: 1; }
+  .precopy:hover { border-color: var(--accent); color: var(--accent); }
 </style>
 </head>
 <body>
 <header>
   <a href="https://ui.eidosagi.com/">eidos ui</a>
   <a href="../">&larr; versions</a>
-  <span class="tag">v16</span>
-  <span class="note">threads — each conversation keeps its own draft and its own stream. Switch mid-stream: nothing mixes, nothing stops.</span>
+  <span class="tag">v19</span>
+  <span class="note">copy — every message and code block copies to the clipboard. Actions appear on hover without moving a pixel; focus returns to the composer.</span>
   <label class="offlinebox"><input type="checkbox" id="offline"> offline</label>
   <button id="drop" class="dropbtn" type="button">drop connection</button>
 </header>
 <div id="connbar"></div>
 <nav id="tabs"></nav>
-<div id="logs"></div>
+<div id="logs" role="log" aria-label="conversation"></div>
+<div id="announcer" class="sr-only" aria-live="polite" aria-atomic="false"></div>
 
-<button id="jump" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>latest</button>
+<button id="jump" type="button" aria-label="Jump to latest message"><svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>latest</button>
 
+<button id="nextchip" type="button"></button>
 <form id="composer">
   <div class="row">
-    <textarea id="box" rows="1" autocomplete="off">Audit the repo's broken links and fix them</textarea>
+    <textarea id="box" rows="1" autocomplete="off" aria-label="Message the agent">Audit the repo's broken links and fix them</textarea>
     <button id="btn" type="submit" class="primary">Send</button>
   </div>
 </form>
 
 <script src="/demos/mock-ai/v2.js?v=3"></script>
 <script>
-// v16 fixes THREADS on top of v15: every piece of conversation state — agent,
-// transcript, draft, stream buffer, pins, tools, approvals, connection — is
-// built per-thread by makeThread(). The composer, Send/Stop, jump pill, and
-// drop button are shared chrome that always act on the ACTIVE thread. A
-// background thread keeps streaming into its hidden transcript; its tab wears
-// a pulsing dot. Switching saves your draft and restores the other one.
+// v19 fixes COPY on top of v18 (and folds in focus discipline): every
+// message grows a hover copy button, every fenced code block grows its own,
+// neither moves a pixel of layout (absolute positioning, opacity only), and
+// after any copy the focus returns to the composer. Copy reads dataset.raw
+// so you get the markdown source, not the rendered text.
 const box = document.getElementById("box");
 const btn = document.getElementById("btn");
 const jump = document.getElementById("jump");
@@ -218,7 +254,7 @@ function mdRender(raw, collapsed) {
   for (let i = 0; i < parts.length; i++) {
     if (i % 2 === 1) {
       const body = parts[i].replace(/^[a-z]*\n?/, "");
-      html += "<pre><code>" + escMd(body) + "</code></pre>";
+      html += '<pre><button class="precopy" type="button">copy</button><code>' + escMd(body) + "</code></pre>";
       continue;
     }
     const lines = parts[i].split("\n");
@@ -250,6 +286,8 @@ const threads = [];
 let active = 0;
 const at = () => threads[active];
 
+const announcer = document.getElementById("announcer");
+
 function makeThread(name, draft) {
   const log = document.createElement("div");
   log.className = "tlog";
@@ -257,6 +295,19 @@ function makeThread(name, draft) {
   const agent = MockAI.v2();
   const t = { name, log, agent, draft: draft || "", busy: false, activeTab: false,
     jumpShown: false, pinned: true, dropped: false, lastSeq: 0 };
+  const empty = document.createElement("div");
+  empty.className = "emptystate";
+  empty.innerHTML = '<div class="es-title">Try one of my rehearsed lines</div><div class="es-chips"></div>';
+  agent.prompts.slice(0, 3).forEach((pr) => {
+    const c = document.createElement("button");
+    c.className = "chip";
+    c.type = "button";
+    c.textContent = pr;
+    c.onclick = () => { if (!t.activeTab) return; box.value = pr; document.getElementById("composer").requestSubmit(); };
+    empty.querySelector(".es-chips").appendChild(c);
+  });
+  log.appendChild(empty);
+  function clearEmpty() { if (empty.parentNode) empty.remove(); }
   let current = null, liveTurn = null, handle = null, thinkingEl = null;
   let buf = "", pumping = false;
   const dead = new Set();
@@ -272,9 +323,28 @@ function makeThread(name, draft) {
   });
 
   function add(cls, text) {
+    clearEmpty();
     const d = document.createElement("div");
     d.className = "msg " + cls;
     d.textContent = text;
+    if (cls === "assistant" || cls === "user") {
+      const act = document.createElement("span");
+      act.className = "msgact";
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = "copy";
+      b.setAttribute("aria-label", "Copy message");
+      b.onclick = async (e) => {
+        e.stopPropagation();
+        const src = d.dataset.raw || d.textContent.replace(/copy$/, "");
+        try { await navigator.clipboard.writeText(src.trim()); b.textContent = "copied ✓"; }
+        catch { b.textContent = "failed"; }
+        setTimeout(() => { b.textContent = "copy"; }, 1200);
+        if (!at().busy) box.focus();     // focus discipline: actions come home
+      };
+      act.appendChild(b);
+      d.appendChild(act);
+    }
     log.appendChild(d);
     follow();
     return d;
@@ -283,7 +353,7 @@ function makeThread(name, draft) {
     if (current) {
       current.dataset.raw = (current.dataset.raw || "") + buf;
       buf = "";
-      if (current.dataset.raw) current.innerHTML = mdRender(current.dataset.raw, true);
+      if (current.dataset.raw) { current.innerHTML = mdRender(current.dataset.raw, true); attachAct(current); }
       follow();
       current.classList.remove("streaming");
     }
@@ -294,8 +364,27 @@ function makeThread(name, draft) {
     buf = buf.slice(2);
     current.dataset.raw = (current.dataset.raw || "") + take;
     current.innerHTML = mdRender(current.dataset.raw);
+    attachAct(current);
     follow();
     requestAnimationFrame(pump);
+  }
+  function attachAct(d) {              // innerHTML re-renders wipe the bar
+    if (d.querySelector(":scope > .msgact")) return;
+    const act = document.createElement("span");
+    act.className = "msgact";
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = "copy";
+    b.setAttribute("aria-label", "Copy message");
+    b.onclick = async (e) => {
+      e.stopPropagation();
+      try { await navigator.clipboard.writeText((d.dataset.raw || d.textContent).trim()); b.textContent = "copied ✓"; }
+      catch { b.textContent = "failed"; }
+      setTimeout(() => { b.textContent = "copy"; }, 1200);
+      if (!at().busy) box.focus();
+    };
+    act.appendChild(b);
+    d.appendChild(act);
   }
   function showThinking() {
     clearThinking();
@@ -416,24 +505,30 @@ function makeThread(name, draft) {
       current.classList.add("md");
       current.classList.add("streaming");
       buf += ev.text;
+      announceStream(ev.text);
       if (!pumping) { pumping = true; requestAnimationFrame(pump); }
     } else if (ev.type === "tool_use") {
       drainAll();
+      milestone(ev.approval === "required"
+        ? "Approval needed: " + ev.label : "Running tool: " + ev.label);
       if (ev.approval === "required") addApprovalCard(ev);
       else addToolRow(ev);
       current = null;
     } else if (ev.type === "tool_result") {
+      milestone("Tool " + (ev.status === "ok" ? "finished" : ev.status) + ": " + fmtMs(ev.metrics.duration_ms));
       resolveToolRow(ev);
       drainAll();
       current = null;
     } else if (ev.type === "abort") {
       drainAll();
+      milestone("Stopped. Partial response kept.");
       if (current && !current.textContent) current.remove();
       add("stopped", "⏹ stopped — partial response kept");
       current = null;
       endTurn(ev.turn_id);
     } else if (ev.type === "done") {
       drainAll();
+      if (t.activeTab) { const fl = takeFlush(); if (fl) announcer.textContent = fl; }
       if (current && !current.textContent) current.remove();
       current = null;
       endTurn(ev.turn_id);
@@ -449,6 +544,41 @@ function makeThread(name, draft) {
       add("stopped", JSON.stringify(ev));
     }
   }
+  // per-thread announcer: the buffer and timer live HERE so a timer armed
+  // while this thread was active can never speak after a switch — deactivate
+  // parks and clears it.
+  let annBuf = "", annTimer = null;
+  function announceStream(text) {
+    if (!t.activeTab) return;
+    annBuf += text;
+    const m = annBuf.match(/^[\s\S]*?[.!?](?:\s|$)/);
+    if (m && m[0].length > 40) {
+      announcer.textContent = m[0].trim();
+      annBuf = annBuf.slice(m[0].length);
+      clearTimeout(annTimer);
+      annTimer = null;
+      return;
+    }
+    if (!annTimer) annTimer = setTimeout(() => {
+      annTimer = null;
+      if (!t.activeTab) { annBuf = ""; return; }
+      if (annBuf.trim()) { announcer.textContent = annBuf.trim(); annBuf = ""; }
+    }, 2500);
+  }
+  function takeFlush() {           // returns pending prose without announcing
+    clearTimeout(annTimer);
+    annTimer = null;
+    const x = annBuf.trim();
+    annBuf = "";
+    return x;
+  }
+  function milestone(line) {       // one assignment: flushed prose + the event
+    if (!t.activeTab) return;
+    const fl = takeFlush();
+    announcer.textContent = fl ? fl + " — " + line : line;
+  }
+  t.annReset = () => { clearTimeout(annTimer); annTimer = null; annBuf = ""; };
+
   function onEventNet(ev) {
     if (t.dropped) return;
     if (ev.seq) t.lastSeq = ev.seq;
@@ -511,12 +641,25 @@ function makeThread(name, draft) {
   return t;
 }
 
+const nextchip = document.getElementById("nextchip");
+nextchip.onclick = () => {
+  box.value = nextchip.dataset.prompt || "";
+  document.getElementById("composer").requestSubmit();
+};
 function refreshChrome() {
   const t = at();
   btn.textContent = t.busy ? "Stop" : "Send";
   btn.classList.toggle("stop", t.busy);
   box.disabled = t.busy;
   jump.classList.toggle("show", t.jumpShown && !t.pinned);
+  const hasTurns = !t.log.querySelector(".emptystate");
+  if (!t.busy && hasTurns) {
+    nextchip.dataset.prompt = t.agent.nextPrompt;
+    nextchip.textContent = "suggested: " + t.agent.nextPrompt;
+    nextchip.classList.add("show");
+  } else {
+    nextchip.classList.remove("show");
+  }
 }
 function renderTabs() {
   tabsEl.innerHTML = "";
@@ -539,6 +682,7 @@ function activate(i) {
     const prev = threads[active];
     prev.activeTab = false;
     prev.draft = box.value;             // your half-typed message stays HERE
+    if (prev.annReset) prev.annReset(); // a parked thread never speaks
     prev.log.classList.remove("active");
   }
   active = i;
@@ -556,9 +700,17 @@ threads.push(makeThread("Link audit", "Audit the repo's broken links and fix the
 threads.push(makeThread("Docs rewrite", "Now rewrite every README"));
 threads.push(makeThread("Cleanup", "Clean up the old release branches"));
 
-logsEl.addEventListener("click", (e) => {
+logsEl.addEventListener("click", async (e) => {
   const head = e.target.closest(".acchead");
-  if (head) head.closest(".mdacc").classList.toggle("open");
+  if (head) { head.closest(".mdacc").classList.toggle("open"); return; }
+  const pc = e.target.closest(".precopy");
+  if (pc) {
+    const code = pc.parentElement.querySelector("code");
+    try { await navigator.clipboard.writeText(code.textContent); pc.textContent = "copied ✓"; }
+    catch { pc.textContent = "failed"; }
+    setTimeout(() => { pc.textContent = "copy"; }, 1200);
+    if (!at().busy) box.focus();
+  }
 });
 jump.onclick = () => {
   const t = at();
@@ -597,15 +749,19 @@ activate(0);
 // tools there, come back to A — nothing mixed, nothing stopped
 window.VIGNETTE = () => {
   activate(0);
-  box.value = "Now rewrite every README";
+  box.value = "Draft the release notes";   // markdown turn: code block to copy
   document.getElementById("composer").requestSubmit();
-  setTimeout(() => {
-    activate(1);                       // A keeps streaming behind its dot
-    box.value = "Audit the repo's broken links and fix them";
-    document.getElementById("composer").requestSubmit();
-  }, 1800);
-  setTimeout(() => activate(0), 6500); // A's stream, untouched and complete
-  setTimeout(() => activate(1), 10500); // B's tools resolved meanwhile
+  const iv = setInterval(() => {
+    const pc = at().log.querySelector(".precopy");
+    if (pc && !at().busy) {
+      clearInterval(iv);
+      setTimeout(() => pc.click(), 1200);
+      setTimeout(() => {
+        const mb = at().log.querySelector(".msg.assistant .msgact button");
+        if (mb) mb.click();
+      }, 3000);
+    }
+  }, 300);
 };
 </script>
 <script src="/demos/reference-chat/_autoplay.js?v=7"></script>

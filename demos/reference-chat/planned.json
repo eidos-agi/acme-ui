@@ -1,35 +1,8 @@
 [
  {
-  "v": 18,
-  "title": "Empty state + suggestion chips",
-  "desc": "A fresh thread shows what to do: clickable suggestion chips for the rehearsed prompts, so nobody stares at an empty box. Chips refill with the next expected prompt after each turn.",
-  "tags": [
-   "composer",
-   "onboarding"
-  ]
- },
- {
-  "v": 19,
-  "title": "Copy actions",
-  "desc": "Copy any message to the clipboard, and every fenced code block gets its own copy button. Actions appear on hover without shifting layout, with copied confirmation in place.",
-  "tags": [
-   "actions",
-   "polish"
-  ]
- },
- {
-  "v": 20,
-  "title": "Interrupt and redirect",
-  "desc": "Typing while the agent streams arms the composer: Enter interrupts the turn and sends your new message immediately; a modifier queues it for after the turn instead. Stopping to say something new is one motion, not two.",
-  "tags": [
-   "control",
-   "composer"
-  ]
- },
- {
   "v": 21,
-  "title": "Edit and resend (fork)",
-  "desc": "Edit any of your messages and resend: the conversation forks at that point and a version pager on the message switches between branches. Nothing is destroyed.",
+  "title": "Branching: edit, resend, regenerate",
+  "desc": "Edit any of your messages and resend, or re-run an assistant turn: the conversation forks and a version pager on the message switches branches. Thumbs recorded per version. Nothing destroyed.",
   "tags": [
    "actions",
    "branching"
@@ -37,15 +10,6 @@
  },
  {
   "v": 22,
-  "title": "Regenerate + feedback",
-  "desc": "Re-run the last assistant turn as a new version behind the same pager, with thumbs up or down recorded per version.",
-  "tags": [
-   "actions",
-   "branching"
-  ]
- },
- {
-  "v": 23,
   "title": "Reasoning disclosure",
   "desc": "Extended thinking streams into a collapsible reasoning drawer above the answer, open while thinking, tucked when the answer starts. Needs mock v3.",
   "tags": [
@@ -54,48 +18,16 @@
   ]
  },
  {
-  "v": 24,
-  "title": "Focus discipline",
-  "desc": "Focus returns to the input box after actions, and the transcript is fully keyboard-navigable.",
-  "tags": [
-   "a11y"
-  ]
- },
- {
-  "v": 25,
-  "title": "Parallel tools",
-  "desc": "Several tools running at once render as separate rows, each with its own state. Needs a parallel-tool mock script.",
-  "tags": [
-   "disclosure"
-  ]
- },
- {
-  "v": 26,
-  "title": "Oversized results",
-  "desc": "Large tool output shows a short summary inline. The full content loads on demand via content_full_ref.",
-  "tags": [
-   "disclosure"
-  ]
- },
- {
-  "v": 27,
-  "title": "Cost receipt",
-  "desc": "The done event's result payload (cost, turns, latency) renders as a quiet receipt line under the turn \u2014 the contract field nothing displays today.",
+  "v": 23,
+  "title": "Tool truth: parallel, oversized, redacted, costed",
+  "desc": "One mock-v3 turn runs tools in parallel, returns an oversized result behind content_full_ref, redacts a secret-bearing argument, and the done event's cost/turns/latency render as a quiet receipt line.",
   "tags": [
    "disclosure",
    "trust"
   ]
  },
  {
-  "v": 28,
-  "title": "Redacted tool args",
-  "desc": "Tool inputs carrying secrets render redacted with reveal-on-hold \u2014 credentials never sit ambient in a transcript.",
-  "tags": [
-   "trust"
-  ]
- },
- {
-  "v": 29,
+  "v": 24,
   "title": "Task tree",
   "desc": "Sub-agents and nested work render as a collapsible tree.",
   "tags": [
@@ -103,7 +35,7 @@
   ]
  },
  {
-  "v": 30,
+  "v": 25,
   "title": "Artifact pane",
   "desc": "Generated documents open in a side pane next to the chat.",
   "tags": [
@@ -111,7 +43,7 @@
   ]
  },
  {
-  "v": 31,
+  "v": 26,
   "title": "Selection-scoped edit",
   "desc": "Select part of an artifact and request a change scoped to that selection.",
   "tags": [
@@ -119,7 +51,7 @@
   ]
  },
  {
-  "v": 32,
+  "v": 27,
   "title": "Mobile ergonomics",
   "desc": "Keyboard avoidance, safe areas, and touch target sizes for phones.",
   "tags": [
@@ -127,7 +59,7 @@
   ]
  },
  {
-  "v": 33,
+  "v": 28,
   "title": "Long-transcript performance",
   "desc": "The transcript stays smooth with thousands of messages, via virtualization.",
   "tags": [
