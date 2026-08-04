@@ -1,0 +1,10 @@
+{
+ "title": "Tool truth: parallel, redacted, oversized, costed",
+ "desc": "Two tools run in parallel and resolve out of order; a secret argument renders as a hold-to-reveal pill; an oversized result stays behind content_full_ref with a load-on-demand trace; and every turn ends with a quiet cost/latency/turns receipt.",
+ "why": "The transcript is the audit log of what the agent did. Secrets ambient, sizes hidden, and costs invisible are three different lies of omission.",
+ "tags": [
+  "disclosure",
+  "trust"
+ ],
+ "auto": true
+}

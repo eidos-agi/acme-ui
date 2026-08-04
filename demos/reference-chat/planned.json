@@ -1,32 +1,5 @@
 [
  {
-  "v": 21,
-  "title": "Branching: edit, resend, regenerate",
-  "desc": "Edit any of your messages and resend, or re-run an assistant turn: the conversation forks and a version pager on the message switches branches. Thumbs recorded per version. Nothing destroyed.",
-  "tags": [
-   "actions",
-   "branching"
-  ]
- },
- {
-  "v": 22,
-  "title": "Reasoning disclosure",
-  "desc": "Extended thinking streams into a collapsible reasoning drawer above the answer, open while thinking, tucked when the answer starts. Needs mock v3.",
-  "tags": [
-   "disclosure",
-   "streaming"
-  ]
- },
- {
-  "v": 23,
-  "title": "Tool truth: parallel, oversized, redacted, costed",
-  "desc": "One mock-v3 turn runs tools in parallel, returns an oversized result behind content_full_ref, redacts a secret-bearing argument, and the done event's cost/turns/latency render as a quiet receipt line.",
-  "tags": [
-   "disclosure",
-   "trust"
-  ]
- },
- {
   "v": 24,
   "title": "Task tree",
   "desc": "Sub-agents and nested work render as a collapsible tree.",

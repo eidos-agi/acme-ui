@@ -1,0 +1,1074 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference chat v23 — tool truth · Eidos UI</title>
+<link rel="stylesheet" href="/brand.css?v=7">
+<link rel="stylesheet" href="/demos/reference-chat/_base.css?v=7">
+<style>
+  /* v3 keeps v2's speaker identity */
+  .user { background: var(--accent); color: var(--accent-ink); align-self: flex-end; max-width: 85%; }
+  .assistant { background: var(--surface); border: 1px solid var(--line); align-self: flex-start; max-width: 85%; }
+  /* v3: tool rows — glanceable head, smoothly expanding body */
+  .toolrow { align-self: flex-start; max-width: 85%; min-width: 18rem;
+    border: 1px solid var(--line); border-radius: 3px; background: var(--tool-bg); }
+  .toolhead { display: flex; align-items: center; gap: .55rem; width: 100%;
+    font-family: var(--mono); font-size: .8rem; color: var(--ink-soft);
+    background: none; border: none; padding: .5rem .75rem; cursor: pointer; text-align: left; }
+  .chev { display: inline-block; transition: transform .2s ease; font-size: .7rem; }
+  .toolrow.open .chev { transform: rotate(90deg); }
+  .tname { color: var(--ink); font-weight: 700; }
+  .tlabel { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tstate { white-space: nowrap; }
+  .tstate.ok { color: var(--accent); }
+  .tstate.err { color: var(--stop); }
+  .spinner { width: .8em; height: .8em; border: 2px solid var(--line);
+    border-top-color: var(--accent); border-radius: 50%; display: inline-block;
+    animation: spin .7s linear infinite; vertical-align: -.1em; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toolbody { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .22s ease; }
+  .toolbody > .inner { overflow: hidden; min-height: 0; }
+  .toolrow.open .toolbody { grid-template-rows: 1fr; }
+  .toolbody pre { font-family: var(--mono); font-size: .75rem; line-height: 1.5;
+    color: var(--ink-soft); padding: 0 .75rem .6rem 2rem; white-space: pre-wrap;
+    border-top: 1px dashed var(--line); margin: 0 0 0 0; padding-top: .5rem; }
+  /* v4 lesson: jump-to-latest appears when you unpin and new content arrives */
+  #jump { position: fixed; left: 50%; transform: translateX(-50%); bottom: 5.6rem;
+    display: none; align-items: center; gap: .4rem; font-family: var(--mono);
+    font-size: .75rem; padding: .4rem .85rem; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--accent);
+    cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+  #jump.show { display: flex; }
+  #jump svg { width: .9rem; height: .9rem; stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  /* v5 lesson: a recoverable error is a note, not a dump */
+  .errnote { align-self: flex-start; display: flex; align-items: center; gap: .45rem;
+    font-family: var(--mono); font-size: .75rem; color: var(--bad);
+    border: 1px dashed var(--bad); border-radius: var(--radius);
+    padding: .35rem .6rem; opacity: .85; }
+  .errnote svg { width: .95rem; height: .95rem; stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  /* v6 lesson: the send-to-first-token gap is visible work, not silence */
+  .thinking { align-self: flex-start; display: flex; gap: .3rem; padding: .7rem .9rem; }
+  .thinking i { width: .45rem; height: .45rem; border-radius: 50%;
+    background: var(--ink-soft); animation: think 1s infinite ease-in-out; }
+  .thinking i:nth-child(2) { animation-delay: .15s; }
+  .thinking i:nth-child(3) { animation-delay: .3s; }
+  @keyframes think { 0%,100% { opacity: .25; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(-2px); } }
+  /* v8 lesson: streamed markdown, rendered not dumped */
+  .assistant.md { white-space: normal; }
+  .assistant.md h3 { font-size: 1.05rem; margin: .2rem 0 .4rem; }
+  .assistant.md h4 { font-size: .95rem; margin: .5rem 0 .3rem; }
+  .assistant.md p { margin: .3rem 0; }
+  .assistant.md ul { margin: .3rem 0; padding-left: 1.2rem; }
+  .assistant.md li { margin: .15rem 0; }
+  .assistant.md code { font-family: var(--mono); font-size: .82em;
+    background: var(--tool-bg); padding: .08em .35em; border-radius: 3px; }
+  .assistant.md pre { background: var(--tool-bg); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: .6rem .8rem; margin: .4rem 0; overflow-x: auto; }
+  .assistant.md pre code { background: none; padding: 0; font-size: .78rem; }
+  .assistant.md a { color: var(--accent); }
+  /* v9 lesson: the caret and the cadence */
+  .assistant.streaming::after { content: "▍"; color: var(--accent);
+    animation: caret 1s steps(1) infinite; margin-left: .05em; }
+  @keyframes caret { 50% { opacity: 0; } }
+  /* v10 lesson: a composer that grows */
+  textarea#box { flex: 1; font: inherit; padding: .55rem .8rem;
+    border-radius: var(--radius); border: 1px solid var(--line);
+    background: var(--surface); color: var(--ink); resize: none;
+    line-height: 1.4; max-height: 9rem; overflow-y: auto; }
+  /* v11 lesson: optimistic send with an honest failure state */
+  .msg.user.pending { opacity: .7; }
+  .msg .chip { display: block; font-family: var(--mono); font-size: .65rem;
+    margin-top: .3rem; opacity: .85; }
+  .msg .chip button { font: inherit; font-family: var(--mono); border: none;
+    background: none; color: inherit; text-decoration: underline; cursor: pointer;
+    padding: 0; }
+  .msg.user.failed { opacity: 1; outline: 1px dashed var(--stop); }
+  .offlinebox { margin-left: auto; display: flex; align-items: center; gap: .35rem;
+    font-family: var(--mono); font-size: .7rem; color: var(--ink-soft); white-space: nowrap; }
+  /* v12 lesson: sections become accordions when the stream ends */
+  .mdacc { border: 1px solid var(--line); border-radius: var(--radius);
+    margin: .45rem 0; background: color-mix(in srgb, var(--surface) 60%, var(--bg)); }
+  .acchead { display: flex; align-items: center; gap: .5rem; width: 100%;
+    font: inherit; font-weight: 600; font-size: .92rem; color: var(--ink);
+    background: none; border: none; padding: .5rem .7rem; cursor: pointer; text-align: left; }
+  .acchead .chev { display: inline-block; transition: transform .2s ease; font-size: .7rem;
+    color: var(--accent); }
+  .mdacc.open .acchead .chev { transform: rotate(90deg); }
+  .accbody { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .25s ease; }
+  .accbody > .inner { overflow: hidden; min-height: 0; padding: 0 .7rem; }
+  .mdacc.open .accbody > .inner { padding-bottom: .5rem; }
+  .mdacc.open .accbody { grid-template-rows: 1fr; }
+  /* v14 lesson: cards wear their risk level; safe tools never ask */
+  .apcard .apdanger { margin-left: auto; font-size: .65rem; letter-spacing: .06em;
+    text-transform: uppercase; padding: .12rem .5rem; border-radius: 999px;
+    border: 1px solid currentColor; }
+  .apcard[data-danger="high"] { border-color: var(--stop); }
+  .apcard[data-danger="medium"] { border-color: var(--accent); }
+  .apcard[data-danger="medium"] .aphead { color: var(--accent); }
+  /* v13 lesson: the approval card */
+  .apcard { align-self: flex-start; max-width: 85%; min-width: 20rem;
+    border: 1px solid var(--stop); border-radius: var(--radius);
+    background: var(--surface); }
+  .apcard .aphead { display: flex; align-items: center; gap: .5rem;
+    padding: .55rem .8rem; font-family: var(--mono); font-size: .78rem;
+    color: var(--stop); border-bottom: 1px dashed var(--line); }
+  .apcard .aphead svg { width: .95rem; height: .95rem; stroke: currentColor;
+    fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    flex: none; }
+  .apcard .apbody { padding: .6rem .8rem; }
+  .apcard .aplabel { font-weight: 600; font-size: .92rem; margin-bottom: .25rem; }
+  .apcard .apinput { font-family: var(--mono); font-size: .74rem; color: var(--ink-soft);
+    white-space: pre-wrap; margin-bottom: .6rem; }
+  .apcard .apbtns { display: flex; gap: .5rem; }
+  .apcard .apbtns button { font: inherit; font-size: .82rem; padding: .4rem .9rem;
+    border-radius: var(--radius); border: 1px solid var(--line); cursor: pointer; }
+  .apcard .approve { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .apcard .deny { background: var(--surface); color: var(--ink); }
+  .apcard.decided .apbtns { display: none; }
+  .apcard .apstate { font-family: var(--mono); font-size: .74rem; margin-top: .2rem; }
+  .apcard.approved { border-color: var(--accent); }
+  .apcard.approved .aphead { color: var(--accent); }
+  /* v15 lesson: the connection drops, the transcript doesn't */
+  #connbar { display: none; align-items: center; gap: .5rem; justify-content: center;
+    font-family: var(--mono); font-size: .75rem; padding: .35rem .8rem;
+    border-bottom: 1px solid var(--line); }
+  #connbar.lost { display: flex; color: var(--stop); background: color-mix(in srgb, var(--stop) 8%, var(--bg)); }
+  #connbar.back { display: flex; color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--bg)); }
+  .dropbtn { font: inherit; font-family: var(--mono); font-size: .7rem;
+    padding: .25rem .6rem; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--surface); color: var(--ink-soft); cursor: pointer; white-space: nowrap; }
+  .dropbtn:hover { border-color: var(--stop); color: var(--stop); }
+  /* v16 lesson: threads are isolated worlds sharing one composer */
+  #tabs { display: flex; gap: .3rem; padding: .45rem 1.25rem 0;
+    border-bottom: 1px solid var(--line); }
+  .tab { font: inherit; font-size: .8rem; font-family: var(--mono);
+    padding: .35rem .8rem; border: 1px solid var(--line); border-bottom: none;
+    border-radius: var(--radius) var(--radius) 0 0; background: var(--bg);
+    color: var(--ink-soft); cursor: pointer; display: flex; align-items: center; gap: .45rem; }
+  .tab.active { background: var(--surface); color: var(--ink); font-weight: 600; }
+  .tab .dot { width: .45rem; height: .45rem; border-radius: 50%;
+    background: var(--accent); animation: dotpulse 1s infinite ease-in-out; }
+  @keyframes dotpulse { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+  #logs { flex: 1; display: flex; min-height: 0; }
+  .tlog { flex: 1; overflow-y: auto; padding: 1.25rem; display: none;
+    flex-direction: column; gap: .8rem; max-width: 46rem; width: 100%; margin: 0 auto; }
+  .tlog.active { display: flex; }
+  /* v17 lesson: announce sanely */
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  /* v18 lesson: the empty state teaches; the next move is always offered */
+  .emptystate { margin: auto; text-align: center; max-width: 30rem; }
+  .es-title { color: var(--ink-soft); font-size: .95rem; margin-bottom: 1rem; }
+  .es-chips { display: flex; flex-direction: column; gap: .5rem; align-items: center; }
+  .chip { font: inherit; font-size: .88rem; padding: .5rem 1rem; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    cursor: pointer; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  #nextchip { display: none; font: inherit; font-family: var(--mono); font-size: .72rem;
+    padding: .3rem .8rem; border-radius: 999px; border: 1px dashed var(--line);
+    background: none; color: var(--ink-soft); cursor: pointer; margin: 0 auto .5rem;
+    max-width: 46rem; }
+  #nextchip.show { display: block; }
+  #nextchip:hover { border-color: var(--accent); color: var(--accent); }
+  /* v19 lesson: actions on hover, zero layout shift, focus comes home */
+  .msg { position: relative; }
+  .msgact { position: absolute; top: .3rem; right: .3rem; opacity: 0;
+    transition: opacity .15s ease; }
+  .msg:hover .msgact, .msgact:focus-within { opacity: 1; }
+  .msgact button { font: inherit; font-family: var(--mono); font-size: .65rem;
+    padding: .2rem .5rem; border-radius: var(--radius); border: 1px solid var(--line);
+    background: var(--bg); color: var(--ink-soft); cursor: pointer; }
+  .msgact button:hover { border-color: var(--accent); color: var(--accent); }
+  .msg.user .msgact button { background: color-mix(in srgb, var(--accent) 85%, black);
+    color: var(--accent-ink); border-color: transparent; }
+  pre { position: relative; }
+  .precopy { position: absolute; top: .35rem; right: .35rem; font-family: var(--mono);
+    font-size: .62rem; padding: .15rem .45rem; border-radius: var(--radius);
+    border: 1px solid var(--line); background: var(--bg); color: var(--ink-soft);
+    cursor: pointer; opacity: 0; transition: opacity .15s ease; }
+  pre:hover .precopy { opacity: 1; }
+  .precopy:hover { border-color: var(--accent); color: var(--accent); }
+  /* v20 lesson: stopping to say something new is one motion */
+  button.primary.interrupt { background: var(--stop); color: var(--stop-ink); }
+  #queuenote { display: none; font-family: var(--mono); font-size: .68rem;
+    color: var(--ink-soft); text-align: center; padding: .2rem 0 .4rem; }
+  #queuenote.show { display: block; }
+  /* v21 lesson: history forks, it doesn't vanish */
+  .pagerbar { align-self: stretch; display: flex; justify-content: flex-end;
+    font-family: var(--mono); font-size: .7rem; color: var(--ink-soft); gap: .3rem;
+    align-items: center; margin-bottom: -.4rem; }
+  .pagerbar button { font: inherit; border: 1px solid var(--line); background: var(--surface);
+    color: var(--ink-soft); border-radius: var(--radius); cursor: pointer;
+    padding: .05rem .45rem; }
+  .pagerbar button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .pagerbar button:disabled { opacity: .35; cursor: default; }
+  .editbox { align-self: flex-end; width: 85%; display: flex; flex-direction: column; gap: .4rem; }
+  .editbox textarea { font: inherit; padding: .5rem .8rem; border-radius: var(--radius);
+    border: 1px solid var(--accent); background: var(--surface); color: var(--ink);
+    resize: none; min-height: 3rem; }
+  .editbox .ebtns { display: flex; gap: .4rem; justify-content: flex-end; }
+  .editbox .ebtns button { font: inherit; font-size: .8rem; padding: .3rem .8rem;
+    border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface);
+    color: var(--ink); cursor: pointer; }
+  .editbox .ebtns .esave { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .thumbs { display: inline-flex; gap: .15rem; margin-left: .3rem; }
+  .thumbs button.sel { color: var(--accent); border-color: var(--accent); }
+  /* v22 lesson: thinking is content with its own room */
+  .rdrawer { align-self: flex-start; max-width: 85%; border: 1px dashed var(--line);
+    border-radius: var(--radius); background: color-mix(in srgb, var(--surface) 55%, var(--bg)); }
+  .rhead { display: flex; align-items: center; gap: .5rem; width: 100%;
+    font-family: var(--mono); font-size: .72rem; color: var(--ink-soft);
+    background: none; border: none; padding: .45rem .7rem; cursor: pointer; text-align: left; }
+  .rhead svg { width: .9rem; height: .9rem; stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .rhead .chev { display: inline-block; transition: transform .2s ease; font-size: .65rem; }
+  .rdrawer.open .rhead .chev { transform: rotate(90deg); }
+  .rbody { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .25s ease; }
+  .rbody > .inner { overflow: hidden; min-height: 0; padding: 0 .7rem; }
+  .rdrawer.open .rbody { grid-template-rows: 1fr; }
+  .rdrawer.open .rbody > .inner { padding-bottom: .5rem; }
+  .rtext { font-size: .84rem; font-style: italic; color: var(--ink-soft);
+    white-space: pre-wrap; line-height: 1.5; }
+  /* v23 lesson: the machine's ledger, honestly rendered */
+  .redacted { background: var(--tool-bg); border: 1px dashed var(--stop);
+    border-radius: 3px; padding: 0 .3em; font-family: var(--mono);
+    cursor: pointer; user-select: none; }
+  .redacted:active { border-style: solid; }
+  .fullref { font: inherit; font-family: var(--mono); font-size: .68rem;
+    margin: .3rem 0 0 2rem; padding: .2rem .6rem; border-radius: var(--radius);
+    border: 1px dashed var(--line); background: none; color: var(--accent);
+    cursor: pointer; display: block; }
+  .fullref:hover { border-color: var(--accent); }
+  .toolbody pre.trace { max-height: 11rem; overflow-y: auto; }
+  .receipt { align-self: flex-end; font-family: var(--mono); font-size: .65rem;
+    color: var(--ink-soft); opacity: .8; margin-top: -.4rem; }
+</style>
+</head>
+<body>
+<header>
+  <a href="https://ui.eidosagi.com/">eidos ui</a>
+  <a href="../">&larr; versions</a>
+  <span class="tag">v23</span>
+  <span class="note">tool truth — parallel tools, secrets redacted, oversized output behind a reference, and a cost receipt on every turn.</span>
+  <label class="offlinebox"><input type="checkbox" id="offline"> offline</label>
+  <button id="drop" class="dropbtn" type="button">drop connection</button>
+</header>
+<div id="connbar"></div>
+<nav id="tabs"></nav>
+<div id="logs" role="log" aria-label="conversation"></div>
+<div id="announcer" class="sr-only" aria-live="polite" aria-atomic="false"></div>
+
+<button id="jump" type="button" aria-label="Jump to latest message"><svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>latest</button>
+
+<button id="nextchip" type="button"></button>
+<div id="queuenote"></div>
+<form id="composer">
+  <div class="row">
+    <textarea id="box" rows="1" autocomplete="off" aria-label="Message the agent">Audit the repo's broken links and fix them</textarea>
+    <button id="btn" type="submit" class="primary">Send</button>
+  </div>
+</form>
+
+<script src="/demos/mock-ai/v3.js?v=1"></script>
+<script>
+// v23 fixes TOOL TRUTH on top of v22: tools run in parallel as independent
+// rows (results resolve out of order); inputs listed in input_redacted render
+// as hold-to-reveal pills so secrets never sit ambient; oversized results
+// stay behind content_full_ref with a load button that fetches the body on
+// demand; and every done event's result renders as a quiet receipt line —
+// cost, latency, turns — the contract field nothing displayed before.
+const box = document.getElementById("box");
+const btn = document.getElementById("btn");
+const jump = document.getElementById("jump");
+const connbar = document.getElementById("connbar");
+const tabsEl = document.getElementById("tabs");
+const logsEl = document.getElementById("logs");
+
+function escMd(t) {
+  return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function inlineMd(t) {
+  t = escMd(t);
+  if ((t.split("**").length - 1) % 2) t += "**";
+  const singles = t.split("*").length - 1 - 2 * (t.split("**").length - 1);
+  if (singles % 2) t += "*";
+  if ((t.split("`").length - 1) % 2) t += "`";
+  t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  t = t.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+  t = t.replace(/`([^`]+)`/g, "<code>$1</code>");
+  t = t.replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  return t;
+}
+function mdRender(raw, collapsed) {
+  let html = "";
+  const parts = raw.split("```");
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 2 === 1) {
+      const body = parts[i].replace(/^[a-z]*\n?/, "");
+      html += '<pre><button class="precopy" type="button">copy</button><code>' + escMd(body) + "</code></pre>";
+      continue;
+    }
+    const lines = parts[i].split("\n");
+    let inList = false, para = [], inAcc = false;
+    const flush = () => { if (para.length) { html += "<p>" + inlineMd(para.join(" ")) + "</p>"; para = []; } };
+    const endList = () => { if (inList) { html += "</ul>"; inList = false; } };
+    const endAcc = () => { if (inAcc) { html += "</div></div></div>"; inAcc = false; } };
+    for (const ln of lines) {
+      if (/^## /.test(ln)) {
+        flush(); endList(); endAcc();
+        const open = collapsed ? "" : " open";
+        html += '<div class="mdacc' + open + '"><button class="acchead" type="button">' +
+          '<span class="chev">▸</span>' + inlineMd(ln.slice(3)) + "</button>" +
+          '<div class="accbody"><div class="inner">';
+        inAcc = true;
+      }
+      else if (/^# /.test(ln)) { flush(); endList(); endAcc(); html += "<h3>" + inlineMd(ln.slice(2)) + "</h3>"; }
+      else if (/^- /.test(ln)) { flush(); if (!inList) { html += "<ul>"; inList = true; } html += "<li>" + inlineMd(ln.slice(2)) + "</li>"; }
+      else if (ln.trim() === "") { flush(); endList(); }
+      else { para.push(ln); }
+    }
+    flush(); endList(); endAcc();
+  }
+  return html;
+}
+function fmtMs(ms) { return ms >= 1000 ? (ms / 1000).toFixed(1) + "s" : ms + "ms"; }
+
+const threads = [];
+let active = 0;
+const at = () => threads[active];
+
+const announcer = document.getElementById("announcer");
+
+function makeThread(name, draft) {
+  const log = document.createElement("div");
+  log.className = "tlog";
+  logsEl.appendChild(log);
+  const agent = MockAI.v3();
+  const t = { name, log, agent, draft: draft || "", busy: false, activeTab: false,
+    jumpShown: false, pinned: true, dropped: false, lastSeq: 0, queue: [] };
+  const empty = document.createElement("div");
+  empty.className = "emptystate";
+  empty.innerHTML = '<div class="es-title">Try one of my rehearsed lines</div><div class="es-chips"></div>';
+  agent.prompts.slice(0, 3).forEach((pr) => {
+    const c = document.createElement("button");
+    c.className = "chip";
+    c.type = "button";
+    c.textContent = pr;
+    c.onclick = () => { if (!t.activeTab) return; box.value = pr; document.getElementById("composer").requestSubmit(); };
+    empty.querySelector(".es-chips").appendChild(c);
+  });
+  log.appendChild(empty);
+  function clearEmpty() { if (empty.parentNode) empty.remove(); }
+  let current = null, liveTurn = null, handle = null, thinkingEl = null;
+  let buf = "", pumping = false;
+  const dead = new Set();
+  const tools = new Map();
+
+  function follow() {
+    if (t.pinned) log.scrollTop = log.scrollHeight;
+    else { t.jumpShown = true; if (t.activeTab) jump.classList.add("show"); }
+  }
+  log.addEventListener("scroll", () => {
+    t.pinned = log.scrollHeight - log.scrollTop - log.clientHeight < 40;
+    if (t.pinned) { t.jumpShown = false; if (t.activeTab) jump.classList.remove("show"); }
+  });
+
+  function add(cls, text) {
+    clearEmpty();
+    const d = document.createElement("div");
+    d.className = "msg " + cls;
+    d.textContent = text;
+    if (cls === "user") d.dataset.prompt = text;
+    if (cls === "assistant" || cls === "user") {
+      const act = document.createElement("span");
+      act.className = "msgact";
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = "copy";
+      b.setAttribute("aria-label", "Copy message");
+      b.onclick = async (e) => {
+        e.stopPropagation();
+        const src = d.dataset.prompt || d.dataset.raw || d.textContent;
+        try { await navigator.clipboard.writeText(src.trim()); b.textContent = "copied ✓"; }
+        catch { b.textContent = "failed"; }
+        setTimeout(() => { b.textContent = "copy"; }, 1200);
+        if (!at().busy) box.focus();     // focus discipline: actions come home
+      };
+      act.appendChild(b);
+      if (cls === "user") {
+        const e = document.createElement("button");
+        e.type = "button";
+        e.textContent = "edit";
+        e.setAttribute("aria-label", "Edit and resend");
+        e.onclick = (ev) => { ev.stopPropagation(); startEdit(d); };
+        act.appendChild(e);
+      }
+      d.appendChild(act);
+    }
+    log.appendChild(d);
+    follow();
+    return d;
+  }
+  function drainAll() {
+    if (current) {
+      current.dataset.raw = (current.dataset.raw || "") + buf;
+      buf = "";
+      if (current.dataset.raw) { current.innerHTML = mdRender(current.dataset.raw, true); attachAct(current); }
+      follow();
+      current.classList.remove("streaming");
+    }
+  }
+  function pump() {
+    if (!buf || !current || t.dropped) { pumping = false; return; }
+    const take = buf.slice(0, 2);
+    buf = buf.slice(2);
+    current.dataset.raw = (current.dataset.raw || "") + take;
+    current.innerHTML = mdRender(current.dataset.raw);
+    attachAct(current);
+    follow();
+    requestAnimationFrame(pump);
+  }
+  function attachAct(d) {              // innerHTML re-renders wipe the bar
+    if (d.querySelector(":scope > .msgact")) return;
+    const act = document.createElement("span");
+    act.className = "msgact";
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = "copy";
+    b.setAttribute("aria-label", "Copy message");
+    b.onclick = async (e) => {
+      e.stopPropagation();
+      try { await navigator.clipboard.writeText((d.dataset.raw || d.textContent).trim()); b.textContent = "copied ✓"; }
+      catch { b.textContent = "failed"; }
+      setTimeout(() => { b.textContent = "copy"; }, 1200);
+      if (!at().busy) box.focus();
+    };
+    act.appendChild(b);
+    const rg = document.createElement("button");
+    rg.type = "button";
+    rg.textContent = "regen";
+    rg.setAttribute("aria-label", "Regenerate this reply");
+    rg.onclick = (e) => { e.stopPropagation(); regenerate(d); };
+    act.appendChild(rg);
+    const th = document.createElement("span");
+    th.className = "thumbs";
+    for (const [sym, val] of [["👍", "up"], ["👎", "down"]]) {
+      const tb = document.createElement("button");
+      tb.type = "button";
+      tb.textContent = sym;
+      tb.setAttribute("aria-label", "Feedback " + val);
+      tb.onclick = (e) => {
+        e.stopPropagation();
+        d.dataset.feedback = val;
+        th.querySelectorAll("button").forEach((x) => x.classList.remove("sel"));
+        tb.classList.add("sel");
+      };
+      th.appendChild(tb);
+    }
+    act.appendChild(th);
+    d.appendChild(act);
+  }
+  function showThinking() {
+    clearThinking();
+    const d = document.createElement("div");
+    d.className = "thinking";
+    d.innerHTML = "<i></i><i></i><i></i>";
+    log.appendChild(d);
+    follow();
+    thinkingEl = d;
+  }
+  function clearThinking() { if (thinkingEl) { thinkingEl.remove(); thinkingEl = null; } }
+
+  function addErrNote(text) {
+    const d = document.createElement("div");
+    d.className = "errnote";
+    d.innerHTML = '<svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 20h16a2 2 0 0 0 1.73-2Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span></span>';
+    d.querySelector("span").textContent = text;
+    log.appendChild(d);
+    follow();
+  }
+  function addApprovalCard(ev) {
+    const card = document.createElement("div");
+    card.className = "apcard";
+    card.dataset.approvalId = ev.approval_id;
+    card.dataset.danger = ev.danger || "high";
+    card.innerHTML =
+      '<div class="aphead"><svg class="ic" style="color:currentColor" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 20h16a2 2 0 0 0 1.73-2Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span>needs your approval</span><span class="apdanger"></span></div>' +
+      '<div class="apbody"><div class="aplabel"></div><div class="apinput"></div>' +
+      '<div class="apbtns"><button class="approve" type="button">Approve</button>' +
+      '<button class="deny" type="button">Deny</button></div><div class="apstate"></div></div>';
+    card.querySelector(".apdanger").textContent = (ev.danger || "high") + " risk";
+    card.querySelector(".aplabel").textContent = ev.label;
+    card.querySelector(".apinput").textContent = (ev.input && ev.input.cmd) ? ev.input.cmd : JSON.stringify(ev.input || {});
+    const state = card.querySelector(".apstate");
+    card.querySelector(".approve").onclick = () => {
+      if (!handle) return;
+      card.classList.add("decided", "approved");
+      state.textContent = "approved — running";
+      handle.decide(ev.approval_id, true);
+      addToolRow(ev);
+    };
+    card.querySelector(".deny").onclick = () => {
+      if (!handle) return;
+      card.classList.add("decided");
+      state.textContent = "denied";
+      handle.decide(ev.approval_id, false);
+    };
+    log.appendChild(card);
+    follow();
+  }
+  function addToolRow(ev) {
+    const row = document.createElement("div");
+    row.className = "toolrow";
+    const head = document.createElement("button");
+    head.className = "toolhead";
+    head.type = "button";
+    head.innerHTML = '<span class="chev">▸</span><span class="tname"></span>' +
+      '<span class="tlabel"></span><span class="tstate"><span class="spinner"></span> <span class="el">0.0s</span></span>';
+    head.querySelector(".tname").textContent = ev.name;
+    head.querySelector(".tlabel").textContent = ev.label;
+    const body = document.createElement("div");
+    body.className = "toolbody";
+    const inner = document.createElement("div");
+    inner.className = "inner";
+    const pre = document.createElement("pre");
+    const red = ev.input_redacted || [];
+    if (red.length) {
+      // render input with secret values as hold-to-reveal pills
+      pre.appendChild(document.createTextNode("input: {\n"));
+      for (const [k, v] of Object.entries(ev.input || {})) {
+        pre.appendChild(document.createTextNode("  " + JSON.stringify(k) + ": "));
+        if (red.includes(k)) {
+          const pill = document.createElement("span");
+          pill.className = "redacted";
+          pill.textContent = "••••••••";
+          pill.title = "hold to reveal";
+          pill.setAttribute("aria-label", "redacted value, hold to reveal");
+          pill.onmousedown = () => { pill.textContent = String(v); };
+          const hide = () => { pill.textContent = "••••••••"; };
+          pill.onmouseup = hide;
+          pill.onmouseleave = hide;
+          pre.appendChild(pill);
+        } else {
+          pre.appendChild(document.createTextNode(JSON.stringify(v)));
+        }
+        pre.appendChild(document.createTextNode("\n"));
+      }
+      pre.appendChild(document.createTextNode("}"));
+    } else {
+      pre.textContent = "input: " + JSON.stringify(ev.input || {}, null, 2);
+    }
+    inner.appendChild(pre);
+    body.appendChild(inner);
+    row.appendChild(head);
+    row.appendChild(body);
+    head.addEventListener("click", () => row.classList.toggle("open"));
+    log.appendChild(row);
+    follow();
+    const t0 = performance.now();
+    const el = head.querySelector(".el");
+    const iv = setInterval(() => {
+      el.textContent = ((performance.now() - t0) / 1000).toFixed(1) + "s";
+    }, 100);
+    tools.set(ev.tool_use_id, { row, state: head.querySelector(".tstate"), pre, iv });
+  }
+  function resolveToolRow(ev) {
+    const tr = tools.get(ev.tool_use_id);
+    if (!tr) return;
+    clearInterval(tr.iv);
+    const ok = ev.status === "ok";
+    tr.state.className = "tstate " + (ok ? "ok" : "err");
+    tr.state.textContent = (ok ? "✓" : "✗") + " " + fmtMs(ev.metrics.duration_ms);
+    const rp = document.createElement("pre");   // result coexists with input:
+    rp.textContent = ev.content;                // the redacted pill survives
+    tr.pre.after(rp);
+    tr.resultPre = rp;
+    if (ev.content_full_ref) {
+      const fr = ev.content_full_ref;
+      const b = document.createElement("button");
+      b.className = "fullref";
+      b.type = "button";
+      b.textContent = "load full trace — " + (fr.bytes / 1000).toFixed(1) + " KB";
+      b.onclick = () => {
+        const body = agent.fetchRef(fr.ref);
+        if (body === null) { b.textContent = "reference expired"; return; }
+        const tp = document.createElement("pre");
+        tp.className = "trace";
+        tp.textContent = body;
+        b.replaceWith(tp);
+        tr.row.classList.add("open");
+      };
+      tr.resultPre.after(b);
+    }
+  }
+  function setBusy(busy) {
+    t.busy = busy;
+    renderTabs();
+    if (t.activeTab) refreshChrome();
+    if (!busy && t.queue.length) {          // queued redirect auto-sends
+      const next = t.queue.shift();
+      setTimeout(() => { if (!t.busy) t.submit(next); if (t.activeTab) refreshChrome(); }, 500);
+    }
+  }
+  function endTurn(turn_id) {
+    clearThinking();
+    for (const tr of tools.values()) {
+      clearInterval(tr.iv);
+      if (tr.state.querySelector(".spinner")) {
+        const el = tr.state.querySelector(".el");
+        tr.state.textContent = "⏹ " + (el ? el.textContent : "");
+      }
+    }
+    dead.add(turn_id);
+    liveTurn = null;
+    handle = null;
+    setBusy(false);
+  }
+  let rdrawer = null, rtext = null;
+  function ensureDrawer() {
+    if (rdrawer && rdrawer.parentNode) return;
+    const el = document.createElement("div");   // closure target: THIS element,
+    el.className = "rdrawer open";              // never the mutable rdrawer var
+    el.innerHTML = '<button class="rhead" type="button">' +
+      '<span class="chev">▸</span>' +
+      '<svg viewBox="0 0 24 24"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/></svg>' +
+      '<span>thinking</span></button><div class="rbody"><div class="inner"><div class="rtext"></div></div></div>';
+    el.querySelector(".rhead").onclick = () => el.classList.toggle("open");
+    rdrawer = el;
+    rtext = el.querySelector(".rtext");
+    clearEmpty();
+    log.appendChild(el);
+    follow();
+  }
+  function tuckDrawer() {
+    if (rdrawer) rdrawer.classList.remove("open");
+    rdrawer = null;
+    rtext = null;
+  }
+
+  function onEvent(ev) {
+    if (dead.has(ev.turn_id)) return;
+    if (liveTurn !== null && ev.turn_id !== liveTurn) return;
+    if (ev.type !== "turn_start" && thinkingEl) clearThinking();
+    if (ev.type === "reasoning") {
+      if (!rdrawer) milestone("Thinking…");
+      ensureDrawer();
+      rtext.textContent += ev.text;
+      follow();
+      return;
+    }
+    if (ev.type === "text" && rdrawer) tuckDrawer();   // answer begins: tuck
+    if (ev.type === "turn_start") {
+      liveTurn = ev.turn_id;
+      current = add("assistant", "");
+    } else if (ev.type === "text") {
+      if (!current) current = add("assistant", "");
+      current.classList.add("md");
+      current.classList.add("streaming");
+      buf += ev.text;
+      announceStream(ev.text);
+      if (!pumping) { pumping = true; requestAnimationFrame(pump); }
+    } else if (ev.type === "tool_use") {
+      drainAll();
+      milestone(ev.approval === "required"
+        ? "Approval needed: " + ev.label : "Running tool: " + ev.label);
+      if (ev.approval === "required") addApprovalCard(ev);
+      else addToolRow(ev);
+      current = null;
+    } else if (ev.type === "tool_result") {
+      milestone("Tool " + (ev.status === "ok" ? "finished" : ev.status) + ": " + fmtMs(ev.metrics.duration_ms));
+      resolveToolRow(ev);
+      drainAll();
+      current = null;
+    } else if (ev.type === "abort") {
+      tuckDrawer();
+      drainAll();
+      milestone("Stopped. Partial response kept.");
+      if (current && !current.textContent) current.remove();
+      add("stopped", "⏹ stopped — partial response kept");
+      current = null;
+      endTurn(ev.turn_id);
+    } else if (ev.type === "done") {
+      drainAll();
+      if (t.activeTab) { const fl = takeFlush(); if (fl) announcer.textContent = fl; }
+      if (current && !current.textContent) current.remove();
+      if (ev.result) {
+        const r = document.createElement("div");
+        r.className = "receipt";
+        const bits = [];
+        if (ev.result.cost != null) bits.push("$" + ev.result.cost.toFixed(4));
+        if (ev.result.latency_ms != null) bits.push(fmtMs(ev.result.latency_ms));
+        if (ev.result.turns != null) bits.push(ev.result.turns + (ev.result.turns === 1 ? " turn" : " turns"));
+        r.textContent = bits.join(" · ");
+        log.appendChild(r);
+        follow();
+      }
+      current = null;
+      endTurn(ev.turn_id);
+    } else if (ev.type === "error" && !ev.recoverable) {
+      add("stopped", "error: " + ev.text);
+      current = null;
+      endTurn(ev.turn_id);
+    } else if (ev.type === "error" && ev.recoverable) {
+      drainAll();
+      addErrNote(ev.text);
+      current = null;
+    } else {
+      add("stopped", JSON.stringify(ev));
+    }
+  }
+  // per-thread announcer: the buffer and timer live HERE so a timer armed
+  // while this thread was active can never speak after a switch — deactivate
+  // parks and clears it.
+  let annBuf = "", annTimer = null;
+  function announceStream(text) {
+    if (!t.activeTab) return;
+    annBuf += text;
+    const m = annBuf.match(/^[\s\S]*?[.!?](?:\s|$)/);
+    if (m && m[0].length > 40) {
+      announcer.textContent = m[0].trim();
+      annBuf = annBuf.slice(m[0].length);
+      clearTimeout(annTimer);
+      annTimer = null;
+      return;
+    }
+    if (!annTimer) annTimer = setTimeout(() => {
+      annTimer = null;
+      if (!t.activeTab) { annBuf = ""; return; }
+      if (annBuf.trim()) { announcer.textContent = annBuf.trim(); annBuf = ""; }
+    }, 2500);
+  }
+  function takeFlush() {           // returns pending prose without announcing
+    clearTimeout(annTimer);
+    annTimer = null;
+    const x = annBuf.trim();
+    annBuf = "";
+    return x;
+  }
+  function milestone(line) {       // one assignment: flushed prose + the event
+    if (!t.activeTab) return;
+    const fl = takeFlush();
+    announcer.textContent = fl ? fl + " — " + line : line;
+  }
+  t.annReset = () => { clearTimeout(annTimer); annTimer = null; annBuf = ""; };
+
+  function onEventNet(ev) {
+    if (t.dropped) return;
+    if (ev.seq) t.lastSeq = ev.seq;
+    onEvent(ev);
+  }
+  function attemptSend(typed, bubble) {
+    const chip = bubble.querySelector(".chip");
+    if (document.getElementById("offline").checked) {
+      chip.textContent = "sending…";
+      setTimeout(() => { if (bubble.classList.contains("pending")) chip.textContent = "still trying…"; }, 1200);
+      setTimeout(() => {
+        if (!bubble.classList.contains("pending")) return;
+        bubble.classList.remove("pending");
+        bubble.classList.add("failed");
+        chip.innerHTML = "";
+        const b = document.createElement("button");
+        b.textContent = "failed — retry";
+        b.onclick = () => attemptSend(typed, bubble);
+        chip.appendChild(b);
+        clearThinking();
+        setBusy(false);
+      }, 2600);
+      return;
+    }
+    if (handle) return;
+    bubble.classList.remove("pending", "failed");
+    if (chip) chip.remove();
+    setBusy(true);
+    showThinking();
+    try { handle = agent.send(typed, onEventNet); }
+    catch (err) { clearThinking(); addErrNote("send failed: " + err.message); setBusy(false); }
+  }
+  t.submit = (typed) => {
+    if (handle) { handle.stop(); return; }
+    if (!typed.trim()) return;
+    const bubble = add("user", typed);
+    bubble.classList.add("pending");
+    const chip = document.createElement("span");
+    chip.className = "chip";
+    chip.textContent = "sending…";
+    bubble.appendChild(chip);
+    attemptSend(typed, bubble);
+  };
+  // ---- branching: capture-on-switch version store keyed by a pager bar ----
+  function tailAfter(el) {           // el and everything after it in the log
+    const nodes = [];
+    let n = el;
+    while (n) { nodes.push(n); n = n.nextSibling; }
+    return nodes;
+  }
+  function getFork(anchorEl) {       // pager bar inserted once, lives forever
+    if (anchorEl.previousSibling && anchorEl.previousSibling.classList &&
+        anchorEl.previousSibling.classList.contains("pagerbar")) {
+      return anchorEl.previousSibling._fork;
+    }
+    const bar = document.createElement("div");
+    bar.className = "pagerbar";
+    bar.innerHTML = '<button class="pprev" type="button">‹</button>' +
+      '<span class="pnum"></span><button class="pnext" type="button">›</button>';
+    log.insertBefore(bar, anchorEl);
+    const fork = { bar, versions: [], active: 0 };
+    bar._fork = fork;
+    const render = () => {
+      bar.querySelector(".pnum").textContent = (fork.active + 1) + "/" + fork.versions.length;
+      bar.querySelector(".pprev").disabled = fork.active === 0;
+      bar.querySelector(".pnext").disabled = fork.active === fork.versions.length - 1;
+    };
+    const goto = (idx) => {
+      if (t.busy || idx < 0 || idx >= fork.versions.length || idx === fork.active) return;
+      const live = tailAfter(bar.nextSibling);      // capture current tail
+      const target = fork.versions[idx] || null;
+      fork.versions[fork.active] = live;
+      live.forEach((n) => n.remove());
+      (fork.versions[idx] || []).forEach((n) => log.appendChild(n));
+      fork.versions[idx] = null;                    // now live again
+      fork.active = idx;
+      render();
+      follow();
+    };
+    bar.querySelector(".pprev").onclick = () => goto(fork.active - 1);
+    bar.querySelector(".pnext").onclick = () => goto(fork.active + 1);
+    fork.render = render;
+    fork.branch = (startEl) => {                    // stash tail, open a live slot
+      const live = tailAfter(startEl);
+      fork.versions[fork.active] = live;
+      live.forEach((n) => n.remove());
+      fork.versions.push(null);                     // null = the live version
+      fork.active = fork.versions.length - 1;
+      render();
+    };
+    return fork;
+  }
+  function startEdit(msgEl) {
+    if (t.busy || log.querySelector(".editbox")) return;
+    const original = (msgEl.dataset.prompt || msgEl.textContent).trim();
+    const eb = document.createElement("div");
+    eb.className = "editbox";
+    eb.innerHTML = '<textarea></textarea><div class="ebtns">' +
+      '<button class="ecancel" type="button">Cancel</button>' +
+      '<button class="esave" type="button">Send edited</button></div>';
+    eb.querySelector("textarea").value = original;
+    msgEl.style.display = "none";
+    msgEl.after(eb);
+    eb.querySelector("textarea").focus();
+    eb.querySelector(".ecancel").onclick = () => { eb.remove(); msgEl.style.display = ""; };
+    eb.querySelector(".esave").onclick = () => {
+      const text = eb.querySelector("textarea").value.trim();
+      eb.remove();
+      msgEl.style.display = "";
+      if (!text) return;
+      const fork = getFork(msgEl);
+      fork.branch(msgEl);
+      t.submit(text);
+      fork.render();
+    };
+  }
+  function regenerate(assistEl) {
+    if (t.busy) return;
+    // the prompt that produced this reply: nearest preceding user message
+    let n = assistEl.previousSibling, prompt = null;
+    while (n) {
+      if (n.classList && n.classList.contains("user")) { prompt = n.dataset.prompt || n.textContent; break; }
+      n = n.previousSibling;
+    }
+    if (!prompt) return;
+    const fork = getFork(assistEl);
+    fork.branch(assistEl);
+    t.resend(prompt.trim());              // same prompt, no duplicate user bubble
+    fork.render();
+  }
+
+  t.resend = (text) => {                 // regen path: no new user bubble
+    if (handle) return;
+    setBusy(true);
+    showThinking();
+    try { handle = agent.send(text, onEventNet); }
+    catch (err) { clearThinking(); addErrNote("send failed: " + err.message); setBusy(false); }
+  };
+  t.hasHandle = () => !!handle;
+  t.interrupt = (typed) => {          // one motion: stop, then say the new thing
+    if (handle) handle.stop();
+    setTimeout(() => t.submit(typed), 60);
+  };
+  t.stop = () => { if (handle) handle.stop(); };
+  t.preroll = (n) => agent.preroll(onEventNet, n);
+  t.drop = () => {
+    if (t.dropped) return;
+    t.dropped = true;
+    connbar.className = "lost";
+    connbar.textContent = "connection lost — reconnecting…";
+    setTimeout(() => {
+      t.dropped = false;
+      agent.replay(t.lastSeq, onEventNet);
+      if (buf && current && !pumping) { pumping = true; requestAnimationFrame(pump); }
+      connbar.className = "back";
+      connbar.textContent = "reconnected — missed events replayed from seq " + t.lastSeq;
+      setTimeout(() => { connbar.className = ""; connbar.textContent = ""; }, 2600);
+    }, 1800);
+  };
+  return t;
+}
+
+const nextchip = document.getElementById("nextchip");
+nextchip.onclick = () => {
+  box.value = nextchip.dataset.prompt || "";
+  document.getElementById("composer").requestSubmit();
+};
+const queuenote = document.getElementById("queuenote");
+function refreshChrome() {
+  const t = at();
+  const typing = box.value.trim().length > 0;
+  btn.textContent = t.busy ? (typing ? "Interrupt" : "Stop") : "Send";
+  btn.classList.toggle("stop", t.busy && !typing);
+  btn.classList.toggle("interrupt", t.busy && typing);
+  box.disabled = false;                 // the composer never locks
+  if (t.queue.length) {
+    queuenote.textContent = "queued: “" + t.queue[0] + "” — sends after this turn (click to cancel)";
+    queuenote.classList.add("show");
+    queuenote.onclick = () => { t.queue = []; refreshChrome(); };
+  } else {
+    queuenote.classList.remove("show");
+  }
+  jump.classList.toggle("show", t.jumpShown && !t.pinned);
+  const hasTurns = !t.log.querySelector(".emptystate");
+  if (!t.busy && hasTurns) {
+    nextchip.dataset.prompt = t.agent.nextPrompt;
+    nextchip.textContent = "suggested: " + t.agent.nextPrompt;
+    nextchip.classList.add("show");
+  } else {
+    nextchip.classList.remove("show");
+  }
+}
+function renderTabs() {
+  tabsEl.innerHTML = "";
+  threads.forEach((t, i) => {
+    const b = document.createElement("button");
+    b.className = "tab" + (i === active ? " active" : "");
+    b.type = "button";
+    b.textContent = t.name;
+    if (t.busy && i !== active) {
+      const d = document.createElement("span");
+      d.className = "dot";
+      b.appendChild(d);
+    }
+    b.onclick = () => activate(i);
+    tabsEl.appendChild(b);
+  });
+}
+function activate(i) {
+  if (threads[active]) {
+    const prev = threads[active];
+    prev.activeTab = false;
+    prev.draft = box.value;             // your half-typed message stays HERE
+    if (prev.annReset) prev.annReset(); // a parked thread never speaks
+    prev.log.classList.remove("active");
+  }
+  active = i;
+  const t = threads[i];
+  t.activeTab = true;
+  t.log.classList.add("active");
+  box.value = t.draft || "";
+  autogrow();
+  if (t.pinned) t.log.scrollTop = t.log.scrollHeight;
+  renderTabs();
+  refreshChrome();
+}
+
+threads.push(makeThread("Link audit", "Audit the repo's broken links and fix them"));
+threads.push(makeThread("Docs rewrite", "Now rewrite every README"));
+threads.push(makeThread("Cleanup", "Clean up the old release branches"));
+
+logsEl.addEventListener("click", async (e) => {
+  const head = e.target.closest(".acchead");
+  if (head) { head.closest(".mdacc").classList.toggle("open"); return; }
+  const pc = e.target.closest(".precopy");
+  if (pc) {
+    const code = pc.parentElement.querySelector("code");
+    try { await navigator.clipboard.writeText(code.textContent); pc.textContent = "copied ✓"; }
+    catch { pc.textContent = "failed"; }
+    setTimeout(() => { pc.textContent = "copy"; }, 1200);
+    if (!at().busy) box.focus();
+  }
+});
+jump.onclick = () => {
+  const t = at();
+  t.log.scrollTop = t.log.scrollHeight;
+  t.pinned = true;
+  t.jumpShown = false;
+  jump.classList.remove("show");
+};
+document.getElementById("drop").onclick = () => at().drop();
+
+function autogrow() {
+  box.style.height = "auto";
+  box.style.height = Math.min(box.scrollHeight, 144) + "px";
+}
+box.addEventListener("input", () => { autogrow(); refreshChrome(); });
+box.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    const t = at();
+    if (e.altKey && t.busy && box.value.trim()) {   // Alt+Enter: queue it
+      t.queue.push(box.value.trim());
+      box.value = "";
+      autogrow();
+      refreshChrome();
+      return;
+    }
+    document.getElementById("composer").requestSubmit();
+  }
+});
+
+document.getElementById("composer").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const t = at();
+  const typed = box.value.trim();
+  if (t.hasHandle()) {
+    if (typed) {                        // interrupt & redirect, one motion
+      box.value = "";
+      autogrow();
+      t.interrupt(typed);
+    } else {
+      t.stop();
+    }
+    refreshChrome();
+    return;
+  }
+  if (!typed) return;
+  box.value = "";
+  autogrow();
+  t.submit(typed);
+  refreshChrome();
+});
+
+activate(0);
+
+// vignette: start a long stream in thread A, switch to B mid-stream and run
+// tools there, come back to A — nothing mixed, nothing stopped
+window.VIGNETTE = () => {
+  activate(0);
+  box.value = "Profile the test suite";
+  document.getElementById("composer").requestSubmit();
+  // when the oversized result lands, load the full trace; receipt follows done
+  const iv = setInterval(() => {
+    const fr = at().log.querySelector(".fullref");
+    if (fr && !at().busy) {
+      clearInterval(iv);
+      setTimeout(() => fr.click(), 1400);
+    }
+  }, 300);
+};
+</script>
+<script src="/demos/reference-chat/_autoplay.js?v=7"></script>
+</body>
+</html>

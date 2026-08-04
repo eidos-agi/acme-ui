@@ -1,0 +1,10 @@
+{
+ "title": "Branching: edit, resend, regenerate",
+ "desc": "Edit any of your messages and resend, or regenerate a reply: the transcript forks behind a version pager that swaps real DOM tails, so nested forks, tool rows, and feedback survive in each version. Thumbs recorded per reply. Nothing destroyed.",
+ "why": "A conversation is a tree pretending to be a line. Edit-and-resend without losing the original is how every major chat earns trust in exploration.",
+ "tags": [
+  "actions",
+  "branching"
+ ],
+ "auto": true
+}

@@ -1,0 +1,10 @@
+{
+ "title": "Reasoning disclosure",
+ "desc": "Extended thinking streams into a dashed drawer with a brain icon \u2014 open while the agent reasons so you can watch, tucked the instant the first answer token lands, reopenable forever. Screen readers hear 'Thinking\u2026' once, never the tokens.",
+ "why": "Reasoning is the agent showing its work. Hiding it wastes trust; leaving it open buries the answer. The drawer does both jobs.",
+ "tags": [
+  "disclosure",
+  "streaming"
+ ],
+ "auto": true
+}
