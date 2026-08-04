@@ -1,0 +1,10 @@
+{
+ "title": "Screen-reader-safe streaming",
+ "desc": "A polite live region announces streamed prose in sentence batches (flushed on sentence boundaries or 2.5 seconds), with tool starts, results, approvals, and stops announced as single summary lines. Only the active thread announces.",
+ "why": "Token-by-token live regions turn a stream into stuttering noise for assistive tech. Sentence batching narrates the same content like a person reading.",
+ "tags": [
+  "a11y",
+  "streaming"
+ ],
+ "auto": true
+}

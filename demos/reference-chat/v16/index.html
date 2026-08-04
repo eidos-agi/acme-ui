@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference chat v16 — thread isolation · Eidos UI</title>
+<link rel="stylesheet" href="/brand.css?v=7">
+<link rel="stylesheet" href="/demos/reference-chat/_base.css?v=7">
+<style>
+  /* v3 keeps v2's speaker identity */
+  .user { background: var(--accent); color: var(--accent-ink); align-self: flex-end; max-width: 85%; }
+  .assistant { background: var(--surface); border: 1px solid var(--line); align-self: flex-start; max-width: 85%; }
+  /* v3: tool rows — glanceable head, smoothly expanding body */
+  .toolrow { align-self: flex-start; max-width: 85%; min-width: 18rem;
+    border: 1px solid var(--line); border-radius: 3px; background: var(--tool-bg); }
+  .toolhead { display: flex; align-items: center; gap: .55rem; width: 100%;
+    font-family: var(--mono); font-size: .8rem; color: var(--ink-soft);
+    background: none; border: none; padding: .5rem .75rem; cursor: pointer; text-align: left; }
+  .chev { display: inline-block; transition: transform .2s ease; font-size: .7rem; }
+  .toolrow.open .chev { transform: rotate(90deg); }
+  .tname { color: var(--ink); font-weight: 700; }
+  .tlabel { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tstate { white-space: nowrap; }
+  .tstate.ok { color: var(--accent); }
+  .tstate.err { color: var(--stop); }
+  .spinner { width: .8em; height: .8em; border: 2px solid var(--line);
+    border-top-color: var(--accent); border-radius: 50%; display: inline-block;
+    animation: spin .7s linear infinite; vertical-align: -.1em; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toolbody { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .22s ease; }
+  .toolbody > .inner { overflow: hidden; min-height: 0; }
+  .toolrow.open .toolbody { grid-template-rows: 1fr; }
+  .toolbody pre { font-family: var(--mono); font-size: .75rem; line-height: 1.5;
+    color: var(--ink-soft); padding: 0 .75rem .6rem 2rem; white-space: pre-wrap;
+    border-top: 1px dashed var(--line); margin: 0 0 0 0; padding-top: .5rem; }
+  /* v4 lesson: jump-to-latest appears when you unpin and new content arrives */
+  #jump { position: fixed; left: 50%; transform: translateX(-50%); bottom: 5.6rem;
+    display: none; align-items: center; gap: .4rem; font-family: var(--mono);
+    font-size: .75rem; padding: .4rem .85rem; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--accent);
+    cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+  #jump.show { display: flex; }
+  #jump svg { width: .9rem; height: .9rem; stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  /* v5 lesson: a recoverable error is a note, not a dump */
+  .errnote { align-self: flex-start; display: flex; align-items: center; gap: .45rem;
+    font-family: var(--mono); font-size: .75rem; color: var(--bad);
+    border: 1px dashed var(--bad); border-radius: var(--radius);
+    padding: .35rem .6rem; opacity: .85; }
+  .errnote svg { width: .95rem; height: .95rem; stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  /* v6 lesson: the send-to-first-token gap is visible work, not silence */
+  .thinking { align-self: flex-start; display: flex; gap: .3rem; padding: .7rem .9rem; }
+  .thinking i { width: .45rem; height: .45rem; border-radius: 50%;
+    background: var(--ink-soft); animation: think 1s infinite ease-in-out; }
+  .thinking i:nth-child(2) { animation-delay: .15s; }
+  .thinking i:nth-child(3) { animation-delay: .3s; }
+  @keyframes think { 0%,100% { opacity: .25; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(-2px); } }
+  /* v8 lesson: streamed markdown, rendered not dumped */
+  .assistant.md { white-space: normal; }
+  .assistant.md h3 { font-size: 1.05rem; margin: .2rem 0 .4rem; }
+  .assistant.md h4 { font-size: .95rem; margin: .5rem 0 .3rem; }
+  .assistant.md p { margin: .3rem 0; }
+  .assistant.md ul { margin: .3rem 0; padding-left: 1.2rem; }
+  .assistant.md li { margin: .15rem 0; }
+  .assistant.md code { font-family: var(--mono); font-size: .82em;
+    background: var(--tool-bg); padding: .08em .35em; border-radius: 3px; }
+  .assistant.md pre { background: var(--tool-bg); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: .6rem .8rem; margin: .4rem 0; overflow-x: auto; }
+  .assistant.md pre code { background: none; padding: 0; font-size: .78rem; }
+  .assistant.md a { color: var(--accent); }
+  /* v9 lesson: the caret and the cadence */
+  .assistant.streaming::after { content: "▍"; color: var(--accent);
+    animation: caret 1s steps(1) infinite; margin-left: .05em; }
+  @keyframes caret { 50% { opacity: 0; } }
+  /* v10 lesson: a composer that grows */
+  textarea#box { flex: 1; font: inherit; padding: .55rem .8rem;
+    border-radius: var(--radius); border: 1px solid var(--line);
+    background: var(--surface); color: var(--ink); resize: none;
+    line-height: 1.4; max-height: 9rem; overflow-y: auto; }
+  /* v11 lesson: optimistic send with an honest failure state */
+  .msg.user.pending { opacity: .7; }
+  .msg .chip { display: block; font-family: var(--mono); font-size: .65rem;
+    margin-top: .3rem; opacity: .85; }
+  .msg .chip button { font: inherit; font-family: var(--mono); border: none;
+    background: none; color: inherit; text-decoration: underline; cursor: pointer;
+    padding: 0; }
+  .msg.user.failed { opacity: 1; outline: 1px dashed var(--stop); }
+  .offlinebox { margin-left: auto; display: flex; align-items: center; gap: .35rem;
+    font-family: var(--mono); font-size: .7rem; color: var(--ink-soft); white-space: nowrap; }
+  /* v12 lesson: sections become accordions when the stream ends */
+  .mdacc { border: 1px solid var(--line); border-radius: var(--radius);
+    margin: .45rem 0; background: color-mix(in srgb, var(--surface) 60%, var(--bg)); }
+  .acchead { display: flex; align-items: center; gap: .5rem; width: 100%;
+    font: inherit; font-weight: 600; font-size: .92rem; color: var(--ink);
+    background: none; border: none; padding: .5rem .7rem; cursor: pointer; text-align: left; }
+  .acchead .chev { display: inline-block; transition: transform .2s ease; font-size: .7rem;
+    color: var(--accent); }
+  .mdacc.open .acchead .chev { transform: rotate(90deg); }
+  .accbody { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .25s ease; }
+  .accbody > .inner { overflow: hidden; min-height: 0; padding: 0 .7rem; }
+  .mdacc.open .accbody > .inner { padding-bottom: .5rem; }
+  .mdacc.open .accbody { grid-template-rows: 1fr; }
+  /* v14 lesson: cards wear their risk level; safe tools never ask */
+  .apcard .apdanger { margin-left: auto; font-size: .65rem; letter-spacing: .06em;
+    text-transform: uppercase; padding: .12rem .5rem; border-radius: 999px;
+    border: 1px solid currentColor; }
+  .apcard[data-danger="high"] { border-color: var(--stop); }
+  .apcard[data-danger="medium"] { border-color: var(--accent); }
+  .apcard[data-danger="medium"] .aphead { color: var(--accent); }
+  /* v13 lesson: the approval card */
+  .apcard { align-self: flex-start; max-width: 85%; min-width: 20rem;
+    border: 1px solid var(--stop); border-radius: var(--radius);
+    background: var(--surface); }
+  .apcard .aphead { display: flex; align-items: center; gap: .5rem;
+    padding: .55rem .8rem; font-family: var(--mono); font-size: .78rem;
+    color: var(--stop); border-bottom: 1px dashed var(--line); }
+  .apcard .aphead svg { width: .95rem; height: .95rem; stroke: currentColor;
+    fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    flex: none; }
+  .apcard .apbody { padding: .6rem .8rem; }
+  .apcard .aplabel { font-weight: 600; font-size: .92rem; margin-bottom: .25rem; }
+  .apcard .apinput { font-family: var(--mono); font-size: .74rem; color: var(--ink-soft);
+    white-space: pre-wrap; margin-bottom: .6rem; }
+  .apcard .apbtns { display: flex; gap: .5rem; }
+  .apcard .apbtns button { font: inherit; font-size: .82rem; padding: .4rem .9rem;
+    border-radius: var(--radius); border: 1px solid var(--line); cursor: pointer; }
+  .apcard .approve { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .apcard .deny { background: var(--surface); color: var(--ink); }
+  .apcard.decided .apbtns { display: none; }
+  .apcard .apstate { font-family: var(--mono); font-size: .74rem; margin-top: .2rem; }
+  .apcard.approved { border-color: var(--accent); }
+  .apcard.approved .aphead { color: var(--accent); }
+  /* v15 lesson: the connection drops, the transcript doesn't */
+  #connbar { display: none; align-items: center; gap: .5rem; justify-content: center;
+    font-family: var(--mono); font-size: .75rem; padding: .35rem .8rem;
+    border-bottom: 1px solid var(--line); }
+  #connbar.lost { display: flex; color: var(--stop); background: color-mix(in srgb, var(--stop) 8%, var(--bg)); }
+  #connbar.back { display: flex; color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--bg)); }
+  .dropbtn { font: inherit; font-family: var(--mono); font-size: .7rem;
+    padding: .25rem .6rem; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--surface); color: var(--ink-soft); cursor: pointer; white-space: nowrap; }
+  .dropbtn:hover { border-color: var(--stop); color: var(--stop); }
+  /* v16 lesson: threads are isolated worlds sharing one composer */
+  #tabs { display: flex; gap: .3rem; padding: .45rem 1.25rem 0;
+    border-bottom: 1px solid var(--line); }
+  .tab { font: inherit; font-size: .8rem; font-family: var(--mono);
+    padding: .35rem .8rem; border: 1px solid var(--line); border-bottom: none;
+    border-radius: var(--radius) var(--radius) 0 0; background: var(--bg);
+    color: var(--ink-soft); cursor: pointer; display: flex; align-items: center; gap: .45rem; }
+  .tab.active { background: var(--surface); color: var(--ink); font-weight: 600; }
+  .tab .dot { width: .45rem; height: .45rem; border-radius: 50%;
+    background: var(--accent); animation: dotpulse 1s infinite ease-in-out; }
+  @keyframes dotpulse { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+  #logs { flex: 1; display: flex; min-height: 0; }
+  .tlog { flex: 1; overflow-y: auto; padding: 1.25rem; display: none;
+    flex-direction: column; gap: .8rem; max-width: 46rem; width: 100%; margin: 0 auto; }
+  .tlog.active { display: flex; }
+</style>
+</head>
+<body>
+<header>
+  <a href="https://ui.eidosagi.com/">eidos ui</a>
+  <a href="../">&larr; versions</a>
+  <span class="tag">v16</span>
+  <span class="note">threads — each conversation keeps its own draft and its own stream. Switch mid-stream: nothing mixes, nothing stops.</span>
+  <label class="offlinebox"><input type="checkbox" id="offline"> offline</label>
+  <button id="drop" class="dropbtn" type="button">drop connection</button>
+</header>
+<div id="connbar"></div>
+<nav id="tabs"></nav>
+<div id="logs"></div>
+
+<button id="jump" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>latest</button>
+
+<form id="composer">
+  <div class="row">
+    <textarea id="box" rows="1" autocomplete="off">Audit the repo's broken links and fix them</textarea>
+    <button id="btn" type="submit" class="primary">Send</button>
+  </div>
+</form>
+
+<script src="/demos/mock-ai/v2.js?v=2"></script>
+<script>
+// v16 fixes THREADS on top of v15: every piece of conversation state — agent,
+// transcript, draft, stream buffer, pins, tools, approvals, connection — is
+// built per-thread by makeThread(). The composer, Send/Stop, jump pill, and
+// drop button are shared chrome that always act on the ACTIVE thread. A
+// background thread keeps streaming into its hidden transcript; its tab wears
+// a pulsing dot. Switching saves your draft and restores the other one.
+const box = document.getElementById("box");
+const btn = document.getElementById("btn");
+const jump = document.getElementById("jump");
+const connbar = document.getElementById("connbar");
+const tabsEl = document.getElementById("tabs");
+const logsEl = document.getElementById("logs");
+
+function escMd(t) {
+  return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function inlineMd(t) {
+  t = escMd(t);
+  if ((t.split("**").length - 1) % 2) t += "**";
+  const singles = t.split("*").length - 1 - 2 * (t.split("**").length - 1);
+  if (singles % 2) t += "*";
+  if ((t.split("`").length - 1) % 2) t += "`";
+  t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  t = t.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+  t = t.replace(/`([^`]+)`/g, "<code>$1</code>");
+  t = t.replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  return t;
+}
+function mdRender(raw, collapsed) {
+  let html = "";
+  const parts = raw.split("```");
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 2 === 1) {
+      const body = parts[i].replace(/^[a-z]*\n?/, "");
+      html += "<pre><code>" + escMd(body) + "</code></pre>";
+      continue;
+    }
+    const lines = parts[i].split("\n");
+    let inList = false, para = [], inAcc = false;
+    const flush = () => { if (para.length) { html += "<p>" + inlineMd(para.join(" ")) + "</p>"; para = []; } };
+    const endList = () => { if (inList) { html += "</ul>"; inList = false; } };
+    const endAcc = () => { if (inAcc) { html += "</div></div></div>"; inAcc = false; } };
+    for (const ln of lines) {
+      if (/^## /.test(ln)) {
+        flush(); endList(); endAcc();
+        const open = collapsed ? "" : " open";
+        html += '<div class="mdacc' + open + '"><button class="acchead" type="button">' +
+          '<span class="chev">▸</span>' + inlineMd(ln.slice(3)) + "</button>" +
+          '<div class="accbody"><div class="inner">';
+        inAcc = true;
+      }
+      else if (/^# /.test(ln)) { flush(); endList(); endAcc(); html += "<h3>" + inlineMd(ln.slice(2)) + "</h3>"; }
+      else if (/^- /.test(ln)) { flush(); if (!inList) { html += "<ul>"; inList = true; } html += "<li>" + inlineMd(ln.slice(2)) + "</li>"; }
+      else if (ln.trim() === "") { flush(); endList(); }
+      else { para.push(ln); }
+    }
+    flush(); endList(); endAcc();
+  }
+  return html;
+}
+function fmtMs(ms) { return ms >= 1000 ? (ms / 1000).toFixed(1) + "s" : ms + "ms"; }
+
+const threads = [];
+let active = 0;
+const at = () => threads[active];
+
+function makeThread(name, draft) {
+  const log = document.createElement("div");
+  log.className = "tlog";
+  logsEl.appendChild(log);
+  const agent = MockAI.v2();
+  const t = { name, log, agent, draft: draft || "", busy: false, activeTab: false,
+    jumpShown: false, pinned: true, dropped: false, lastSeq: 0 };
+  let current = null, liveTurn = null, handle = null, thinkingEl = null;
+  let buf = "", pumping = false;
+  const dead = new Set();
+  const tools = new Map();
+
+  function follow() {
+    if (t.pinned) log.scrollTop = log.scrollHeight;
+    else { t.jumpShown = true; if (t.activeTab) jump.classList.add("show"); }
+  }
+  log.addEventListener("scroll", () => {
+    t.pinned = log.scrollHeight - log.scrollTop - log.clientHeight < 40;
+    if (t.pinned) { t.jumpShown = false; if (t.activeTab) jump.classList.remove("show"); }
+  });
+
+  function add(cls, text) {
+    const d = document.createElement("div");
+    d.className = "msg " + cls;
+    d.textContent = text;
+    log.appendChild(d);
+    follow();
+    return d;
+  }
+  function drainAll() {
+    if (current) {
+      current.dataset.raw = (current.dataset.raw || "") + buf;
+      buf = "";
+      if (current.dataset.raw) current.innerHTML = mdRender(current.dataset.raw, true);
+      follow();
+      current.classList.remove("streaming");
+    }
+  }
+  function pump() {
+    if (!buf || !current || t.dropped) { pumping = false; return; }
+    const take = buf.slice(0, 2);
+    buf = buf.slice(2);
+    current.dataset.raw = (current.dataset.raw || "") + take;
+    current.innerHTML = mdRender(current.dataset.raw);
+    follow();
+    requestAnimationFrame(pump);
+  }
+  function showThinking() {
+    clearThinking();
+    const d = document.createElement("div");
+    d.className = "thinking";
+    d.innerHTML = "<i></i><i></i><i></i>";
+    log.appendChild(d);
+    follow();
+    thinkingEl = d;
+  }
+  function clearThinking() { if (thinkingEl) { thinkingEl.remove(); thinkingEl = null; } }
+
+  function addErrNote(text) {
+    const d = document.createElement("div");
+    d.className = "errnote";
+    d.innerHTML = '<svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 20h16a2 2 0 0 0 1.73-2Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span></span>';
+    d.querySelector("span").textContent = text;
+    log.appendChild(d);
+    follow();
+  }
+  function addApprovalCard(ev) {
+    const card = document.createElement("div");
+    card.className = "apcard";
+    card.dataset.approvalId = ev.approval_id;
+    card.dataset.danger = ev.danger || "high";
+    card.innerHTML =
+      '<div class="aphead"><svg class="ic" style="color:currentColor" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 20h16a2 2 0 0 0 1.73-2Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span>needs your approval</span><span class="apdanger"></span></div>' +
+      '<div class="apbody"><div class="aplabel"></div><div class="apinput"></div>' +
+      '<div class="apbtns"><button class="approve" type="button">Approve</button>' +
+      '<button class="deny" type="button">Deny</button></div><div class="apstate"></div></div>';
+    card.querySelector(".apdanger").textContent = (ev.danger || "high") + " risk";
+    card.querySelector(".aplabel").textContent = ev.label;
+    card.querySelector(".apinput").textContent = (ev.input && ev.input.cmd) ? ev.input.cmd : JSON.stringify(ev.input || {});
+    const state = card.querySelector(".apstate");
+    card.querySelector(".approve").onclick = () => {
+      if (!handle) return;
+      card.classList.add("decided", "approved");
+      state.textContent = "approved — running";
+      handle.decide(ev.approval_id, true);
+      addToolRow(ev);
+    };
+    card.querySelector(".deny").onclick = () => {
+      if (!handle) return;
+      card.classList.add("decided");
+      state.textContent = "denied";
+      handle.decide(ev.approval_id, false);
+    };
+    log.appendChild(card);
+    follow();
+  }
+  function addToolRow(ev) {
+    const row = document.createElement("div");
+    row.className = "toolrow";
+    const head = document.createElement("button");
+    head.className = "toolhead";
+    head.type = "button";
+    head.innerHTML = '<span class="chev">▸</span><span class="tname"></span>' +
+      '<span class="tlabel"></span><span class="tstate"><span class="spinner"></span> <span class="el">0.0s</span></span>';
+    head.querySelector(".tname").textContent = ev.name;
+    head.querySelector(".tlabel").textContent = ev.label;
+    const body = document.createElement("div");
+    body.className = "toolbody";
+    const inner = document.createElement("div");
+    inner.className = "inner";
+    const pre = document.createElement("pre");
+    pre.textContent = "input: " + JSON.stringify(ev.input || {}, null, 2);
+    inner.appendChild(pre);
+    body.appendChild(inner);
+    row.appendChild(head);
+    row.appendChild(body);
+    head.addEventListener("click", () => row.classList.toggle("open"));
+    log.appendChild(row);
+    follow();
+    const t0 = performance.now();
+    const el = head.querySelector(".el");
+    const iv = setInterval(() => {
+      el.textContent = ((performance.now() - t0) / 1000).toFixed(1) + "s";
+    }, 100);
+    tools.set(ev.tool_use_id, { row, state: head.querySelector(".tstate"), pre, iv });
+  }
+  function resolveToolRow(ev) {
+    const tr = tools.get(ev.tool_use_id);
+    if (!tr) return;
+    clearInterval(tr.iv);
+    const ok = ev.status === "ok";
+    tr.state.className = "tstate " + (ok ? "ok" : "err");
+    tr.state.textContent = (ok ? "✓" : "✗") + " " + fmtMs(ev.metrics.duration_ms);
+    tr.pre.textContent = ev.content;
+  }
+  function setBusy(busy) {
+    t.busy = busy;
+    renderTabs();
+    if (t.activeTab) refreshChrome();
+  }
+  function endTurn(turn_id) {
+    clearThinking();
+    for (const tr of tools.values()) {
+      clearInterval(tr.iv);
+      if (tr.state.querySelector(".spinner")) {
+        const el = tr.state.querySelector(".el");
+        tr.state.textContent = "⏹ " + (el ? el.textContent : "");
+      }
+    }
+    dead.add(turn_id);
+    liveTurn = null;
+    handle = null;
+    setBusy(false);
+  }
+  function onEvent(ev) {
+    if (dead.has(ev.turn_id)) return;
+    if (liveTurn !== null && ev.turn_id !== liveTurn) return;
+    if (ev.type !== "turn_start" && thinkingEl) clearThinking();
+    if (ev.type === "turn_start") {
+      liveTurn = ev.turn_id;
+      current = add("assistant", "");
+    } else if (ev.type === "text") {
+      if (!current) current = add("assistant", "");
+      current.classList.add("md");
+      current.classList.add("streaming");
+      buf += ev.text;
+      if (!pumping) { pumping = true; requestAnimationFrame(pump); }
+    } else if (ev.type === "tool_use") {
+      drainAll();
+      if (ev.approval === "required") addApprovalCard(ev);
+      else addToolRow(ev);
+      current = null;
+    } else if (ev.type === "tool_result") {
+      resolveToolRow(ev);
+      drainAll();
+      current = null;
+    } else if (ev.type === "abort") {
+      drainAll();
+      if (current && !current.textContent) current.remove();
+      add("stopped", "⏹ stopped — partial response kept");
+      current = null;
+      endTurn(ev.turn_id);
+    } else if (ev.type === "done") {
+      drainAll();
+      if (current && !current.textContent) current.remove();
+      current = null;
+      endTurn(ev.turn_id);
+    } else if (ev.type === "error" && !ev.recoverable) {
+      add("stopped", "error: " + ev.text);
+      current = null;
+      endTurn(ev.turn_id);
+    } else if (ev.type === "error" && ev.recoverable) {
+      drainAll();
+      addErrNote(ev.text);
+      current = null;
+    } else {
+      add("stopped", JSON.stringify(ev));
+    }
+  }
+  function onEventNet(ev) {
+    if (t.dropped) return;
+    if (ev.seq) t.lastSeq = ev.seq;
+    onEvent(ev);
+  }
+  function attemptSend(typed, bubble) {
+    const chip = bubble.querySelector(".chip");
+    if (document.getElementById("offline").checked) {
+      chip.textContent = "sending…";
+      setTimeout(() => { if (bubble.classList.contains("pending")) chip.textContent = "still trying…"; }, 1200);
+      setTimeout(() => {
+        if (!bubble.classList.contains("pending")) return;
+        bubble.classList.remove("pending");
+        bubble.classList.add("failed");
+        chip.innerHTML = "";
+        const b = document.createElement("button");
+        b.textContent = "failed — retry";
+        b.onclick = () => attemptSend(typed, bubble);
+        chip.appendChild(b);
+        clearThinking();
+        setBusy(false);
+      }, 2600);
+      return;
+    }
+    if (handle) return;
+    bubble.classList.remove("pending", "failed");
+    if (chip) chip.remove();
+    setBusy(true);
+    showThinking();
+    handle = agent.send(typed, onEventNet);
+  }
+  t.submit = (typed) => {
+    if (handle) { handle.stop(); return; }
+    if (!typed.trim()) return;
+    const bubble = add("user", typed);
+    bubble.classList.add("pending");
+    const chip = document.createElement("span");
+    chip.className = "chip";
+    chip.textContent = "sending…";
+    bubble.appendChild(chip);
+    attemptSend(typed, bubble);
+  };
+  t.hasHandle = () => !!handle;
+  t.stop = () => { if (handle) handle.stop(); };
+  t.preroll = (n) => agent.preroll(onEventNet, n);
+  t.drop = () => {
+    if (t.dropped) return;
+    t.dropped = true;
+    connbar.className = "lost";
+    connbar.textContent = "connection lost — reconnecting…";
+    setTimeout(() => {
+      t.dropped = false;
+      agent.replay(t.lastSeq, onEventNet);
+      if (buf && current && !pumping) { pumping = true; requestAnimationFrame(pump); }
+      connbar.className = "back";
+      connbar.textContent = "reconnected — missed events replayed from seq " + t.lastSeq;
+      setTimeout(() => { connbar.className = ""; connbar.textContent = ""; }, 2600);
+    }, 1800);
+  };
+  return t;
+}
+
+function refreshChrome() {
+  const t = at();
+  btn.textContent = t.busy ? "Stop" : "Send";
+  btn.classList.toggle("stop", t.busy);
+  box.disabled = t.busy;
+  jump.classList.toggle("show", t.jumpShown && !t.pinned);
+}
+function renderTabs() {
+  tabsEl.innerHTML = "";
+  threads.forEach((t, i) => {
+    const b = document.createElement("button");
+    b.className = "tab" + (i === active ? " active" : "");
+    b.type = "button";
+    b.textContent = t.name;
+    if (t.busy && i !== active) {
+      const d = document.createElement("span");
+      d.className = "dot";
+      b.appendChild(d);
+    }
+    b.onclick = () => activate(i);
+    tabsEl.appendChild(b);
+  });
+}
+function activate(i) {
+  if (threads[active]) {
+    const prev = threads[active];
+    prev.activeTab = false;
+    prev.draft = box.value;             // your half-typed message stays HERE
+    prev.log.classList.remove("active");
+  }
+  active = i;
+  const t = threads[i];
+  t.activeTab = true;
+  t.log.classList.add("active");
+  box.value = t.draft || "";
+  autogrow();
+  if (t.pinned) t.log.scrollTop = t.log.scrollHeight;
+  renderTabs();
+  refreshChrome();
+}
+
+threads.push(makeThread("Link audit", "Audit the repo's broken links and fix them"));
+threads.push(makeThread("Docs rewrite", "Now rewrite every README"));
+threads.push(makeThread("Cleanup", "Clean up the old release branches"));
+
+logsEl.addEventListener("click", (e) => {
+  const head = e.target.closest(".acchead");
+  if (head) head.closest(".mdacc").classList.toggle("open");
+});
+jump.onclick = () => {
+  const t = at();
+  t.log.scrollTop = t.log.scrollHeight;
+  t.pinned = true;
+  t.jumpShown = false;
+  jump.classList.remove("show");
+};
+document.getElementById("drop").onclick = () => at().drop();
+
+function autogrow() {
+  box.style.height = "auto";
+  box.style.height = Math.min(box.scrollHeight, 144) + "px";
+}
+box.addEventListener("input", autogrow);
+box.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    document.getElementById("composer").requestSubmit();
+  }
+});
+
+document.getElementById("composer").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const t = at();
+  if (t.hasHandle()) { t.stop(); return; }
+  const typed = box.value;
+  box.value = "";
+  autogrow();
+  t.submit(typed);
+});
+
+activate(0);
+
+// vignette: start a long stream in thread A, switch to B mid-stream and run
+// tools there, come back to A — nothing mixed, nothing stopped
+window.VIGNETTE = () => {
+  activate(0);
+  box.value = "Now rewrite every README";
+  document.getElementById("composer").requestSubmit();
+  setTimeout(() => {
+    activate(1);                       // A keeps streaming behind its dot
+    box.value = "Audit the repo's broken links and fix them";
+    document.getElementById("composer").requestSubmit();
+  }, 1800);
+  setTimeout(() => activate(0), 6500); // A's stream, untouched and complete
+  setTimeout(() => activate(1), 10500); // B's tools resolved meanwhile
+};
+</script>
+<script src="/demos/reference-chat/_autoplay.js?v=7"></script>
+</body>
+</html>

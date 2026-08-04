@@ -1,0 +1,9 @@
+{
+ "title": "Thread isolation",
+ "desc": "Three threads, each with its own agent session, transcript, draft, stream, pins, and connection. Switching mid-stream mixes nothing and stops nothing; a busy background thread wears a pulsing dot on its tab.",
+ "why": "Real work is parallel conversations. Isolation is what lets a stream keep running where you left it while you type somewhere else.",
+ "tags": [
+  "threads"
+ ],
+ "auto": true
+}

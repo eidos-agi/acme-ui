@@ -1,0 +1,9 @@
+{
+ "title": "Reconnect + replay",
+ "desc": "Drop the connection mid-stream and the transcript freezes while the server keeps talking into its journal. On reconnect the client replays everything after its last seq cursor, and the pump paces the catch-up so it reads as fast typing.",
+ "why": "Networks drop. The seq envelope exists precisely so a reconnecting client can ask for the gap instead of losing it.",
+ "tags": [
+  "resume"
+ ],
+ "auto": true
+}

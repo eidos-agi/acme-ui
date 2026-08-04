@@ -118,6 +118,7 @@ window.MockAI.v2 = (function () {
     const session_id = "mock-" + Math.random().toString(36).slice(2, 8);
     let seq = 0, turnCount = 0, scriptIdx = 0;
     let timers = [], liveTurn = null, cb = null, pendingApproval = null;
+    const journal = [];   // every emitted event, in order — the resume log
 
     function emit(ev, turn_id) {
       ev.session_id = session_id;
@@ -126,6 +127,7 @@ window.MockAI.v2 = (function () {
       if (ev.type === "done" || ev.type === "abort" || (ev.type === "error" && !ev.recoverable)) {
         if (turn_id === liveTurn) liveTurn = null;
       }
+      journal.push({ ...ev });
       cb && cb(ev);
     }
 
@@ -192,6 +194,11 @@ window.MockAI.v2 = (function () {
         };
       },
       get busy() { return liveTurn !== null; },
+      // Resume: synchronously re-deliver every journaled event after last_seq.
+      // This IS the spec's reconnect story — seq is the cursor.
+      replay(last_seq, onEvent) {
+        for (const ev of journal) if (ev.seq > last_seq) onEvent({ ...ev });
+      },
       // Instantly materialize the first N turns (no timers) so demos can skip
       // straight to their addition. Next send() continues the cycle.
       preroll(onEvent, turns = 1) {
