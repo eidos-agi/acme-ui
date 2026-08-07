@@ -85,3 +85,20 @@ the pages are normalized. If you add a new shared file, add it to
 - Copy: plain sentences. No "grown in public", no em-dash aphorisms.
 - Brand: tokens only. If you are writing a hex color anywhere except
   `brand.css`, stop.
+
+## Screenshot review
+
+A screenshot is product evidence, not a beauty shot. Review the rendered state
+for meaning as well as layout:
+
+- Prove desktop and phone widths have no horizontal overflow or overlapping
+  regions. Compare important bounding boxes; do not rely on a glance alone.
+- Remove axes, ticks, and labels that turn into visual debris at a narrow
+  breakpoint. Decoration does not earn immunity from responsive review.
+- Translate implementation coordinates for people. Show “column 6 of 10,” not
+  a zero-based `x5`; reserve raw values for an explicitly technical trace.
+- Every computed metric names its unit and direction. “Board fit — higher is
+  better” is legible; an unexplained negative “Evaluation” is not.
+- Do not use error color merely because a valid score is negative.
+- Capture a meaningful dynamic state, then exercise pause, resume, restart, and
+  one failure state. A loaded shell is not proof that the interface works.
